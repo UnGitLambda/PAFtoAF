@@ -37,7 +37,7 @@ def print_help():
     """
     Invoked when the user asks for help with the [--help] prameter
     """
-    print("-p <task> -f <file> -fo <format> -r <reduction> [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
+    print("-p <task> -f <file> -fo <format> [-r <reduction>] [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
     print("<task> is the computational problem, use --problems to see the ones supported")
     print("<file> is the input, the preference-based argumentation framework")
     print("<format> file format for input PAF; for a list of available formats use option --formats")
@@ -187,7 +187,7 @@ def parse_argument_papx(c):
     attacksFrom[arg] = set()
     preferences[arg] = set()
     
-def parse_attack_ptgf(c):
+def parse_attack_ptgf(c):  #TODO cases where only one arg is stipulated
     arg1 = c[:c.find(" "):1]
     arg2 = c[c.find(" ")+1:c.find("\n"):1]
     if arg1 in args and arg2 in args:
@@ -254,24 +254,42 @@ def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     
     file = open(''.join([outputFile, ".", fileformat]) , "w+")
     if fileformat == "tgf":
-        for i in args:
-            file.write("".join([i,"\n"]))
-        file.write("#\n")
-        for j in newAttacksFrom.keys():
-            for k in newAttacksFrom[j]:
-                file.write(''.join([j," ",k,"\n"]))
+        write_tgf(file)
     elif fileformat == "apx":
-        for i in args:
-            file.write("arg({})\n".format(i))
-        for j in newAttacksFrom.keys():
-            for k in newAttacksFrom[j]:
-                file.write("att({},{})\n".format(j,k))
+        write_apx(file)
     else:
         print("Unsupported format ", fileformat,", suported formats are : ")
         print_formats()
         raise UnsupportedFormatException("Unsuported format : ", fileformat)
     file.flush()
     file.close()
+
+def write_tgf(file):
+    for i in args:
+            write_arg_tgf(file,i)
+        file.write("#\n")
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
+                write_att_tgf(file,j,k)
+
+def write_arg_tgf(file, arg):
+    file.write("".join([arg,"\n"]))
+
+def write_att_tgf(file, arg1, arg2):
+    file.write(''.join([arg1," ",arg2,"\n"]))
+
+def write_apx(file):
+    for i in args:
+            write_arg_apx(file, i)
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
+                write_att_apx(file,j,k)
+
+def write_arg_apx(file, arg):
+    file.write("arg({})\n".format(arg))
+
+def write_att_apx(file, arg1, arg2):
+    file.write("att({},{})\n".format(arg1,arg2))
 
 def print_AF(newAttacksFrom, fileformat):
     
@@ -381,13 +399,21 @@ def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
             continue
         toFile(copyAttacksFrom, output, fileformat)
     
-def solverOutput(solver, path = None, scan = False,): #TODO
+def solverOutput(solver, path = None, scan = False): #TODO
     if (path is None) or scan:
         scan = True
         for file in os.scandir():
-            if os.fsdecode(file) == solver
+            if os.fsdecode(file) == solver:
+                os.system(file.path)
             if file.is_dir():
                 solverOutput(solver, file.path, scan)
+    if(path not is None):
+        if os.is_dir(path):
+            solverOutput(solver, path, True)
+        else:
+            try:
+                output = os.popen(path).readlines()
+            except(#TODO)
         
 def parse_list(string):
     """
@@ -421,7 +447,7 @@ def parse_list(string):
         raise ParsingException("Never ending list to parse.")
     return out
             
-#On essaie en dessous de simuler un switch case avec les dictionnaires
+#We try to simulate a switch case function using dictionaries.
 
 switcher_options = {
         "--help" : print_help,
@@ -477,6 +503,7 @@ else:
         if "-sp" in argv:
             path = argv[argv.index("-sp")+1]
         else:
+            solver = None
             path = None
             scan = True
         sysOutput = solverOutput(solver, path, scan)
