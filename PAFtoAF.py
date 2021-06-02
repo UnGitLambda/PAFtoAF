@@ -7,7 +7,6 @@ Created on Fri May 28 2021
 
 from sys import argv
 import os
-from enum import Enum
 import copy
 
 class UnsupportedFormatException(Exception):
@@ -22,16 +21,27 @@ class FormatSyntaxException(Exception):
 class PreferenceException(Exception):
     pass
 
+class ParsingException(Exception):
+    pass
+
+#We define these here to share them between functions
+args = set()
+attacksFrom = dict()
+preferences = dict()
+    
 def print_help():
     """
     Invoked when the user asks for help with the [--help] prameter
     """
-    print("-p <task> -f <file> -fo <format> -r <reduction> [-a <query>] [--print [-out <filename>] ] \n")
+    print("-p <task> -f <file> -fo <format> -r <reduction> [-a <query>] [-out <filename(s)>] \n")
     print("<task> is the computational problem, use --problems to see the ones supported")
     print("<file> is the input, the preference-based argumentation framework")
     print("<format> file format for input PAF; for a list of available formats use option --formats")
     print("<reduction> is the reduction to use to get an AF from the input PAF, use --reductions to see the available reductions")
     print("<query> used for prblems DC and/or DS, it is the argument concerned by the problem")
+    print("<filename> is the output for the resulting AF to be printed on, if you want the output to be on the terminal use stdout as filename.")
+    print("If you wish to have multiple prints (for exemple one on the terminal and one on a file) state every file this way : [file1,file2,file3...]")
+    print("The names of the files must contain their format (Exemple : [stdout, file.tgf, file2.apx])")
     print("Options :")
     print("--help prints this message")
     print("--problems prints the lists of available computational problems")
@@ -78,6 +88,19 @@ def print_reductions():
     print("R3 : att(1,2) is kept in the AF.")
     print("R4 : att(1,2) and att(2,1) are in the resulting AF.\n")
 
+def outputs():
+    """
+    Method that uses the sys.argv list to find the indicated outputs in it (thanks to the -out <filename(s)>).
+    It then reconstructs the list in a string format and parses it thanks to the parse_list method below.
+    None --> List  (None because it reads the command line and does not need any other input)
+    """
+    outputs = ''
+    i=1
+    while("]" not in outputs):
+        outputs += argv[argv.index("-out")+i]
+        i += 1
+    return(parse_list(outputs))
+            
 def toPaf(inputFile, fileformat):
     """
     This function converts the file (input) into a Preference-based Argumentation Framework.
@@ -92,101 +115,125 @@ def toPaf(inputFile, fileformat):
     assert type(inputFile) is str, "The first argument of this method must be the name of the inputFile. (type String)"
     assert type(fileformat) is str, "The second argument of this method must be the extension of the inputFile. (type String)"
     
-    args = set()
-    attacksFrom = dict()
-    preferences = dict()
     try:
         file = open(inputFile, "r")
-    except(FileNotFoundError, OSError, IOError):
+    except FileNotFoundError:
         print("Unable to open the file.")
+        raise FileNotFoundError("Unable to find the file.")
+    except(OSError, IOError):
+        print("System error")
         raise
-    c = file.readline()
     if fileformat == "ptgf":
-        ct = 0
-        while c != "":
-            if c == "\n":
-                continue
-            elif c == "#\n":
-                if ct<2:
-                    ct += 1
-                else :
-                    print("Error parsing the file, more than two #")
-                    raise FormatException(".ptgf format Exception, more than two #")
-            elif(ct == 0):
-                arg = c[:c.find("\n")]
-                args.add(arg)
-                attacksFrom[arg] = set()
-                preferences[arg] = set()
-            elif ct == 1:
-                arg1 = c[:c.find(" "):1]
-                arg2 = c[c.find(" ")+1:c.find("\n"):1]
-                if arg in args and arg2 in args:
-                    attacksFrom[arg1].add(arg2)
-                else:
-                    print("Argument ", arg1 if arg2 in args else arg2, " is referenced in attacks but not defined.")
-                    raise FormatSyntaxException("Argument referenced before initialization")
-            else:
-                arg1 = c[:c.find(" "):1]
-                arg2 = c[c.find(" ")+1::1] if c[-1]!="\n" else c[c.find(" ")+1:-1:1]
-                if arg1 in args and arg2 in args:
-                    preferences[arg1].add(arg2)
-                    for i in preferences[arg2]:
-                        preferences[arg1].add(i)
-                    for j in preferences.keys():
-                        if arg1 in preferences[j]:
-                            preferences[j].add(arg2)
-                elif arg1 in preferences[arg2]:
-                    print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
-                    raise PreferenceException("Ambiguious preferences")
-                else:
-                    print("Argument ", arg1 if arg2 in args else arg2, " is referenced in prefernces but not defined.")
-                    raise FormatSyntaxException("Argument referenced before initialization.")
-            c = file.readline()
+        parse_ptgf(file)
     elif fileformat ==  "papx":
-        while c != "":
-            if c == "\n":
-                continue
-            elif c[:3:1] == "arg":
-                arg = c[c.find("(")+1:c.find(")"):1]
-                args.add(arg)
-                attacksFrom[arg] = set()
-                preferences[arg] = set()
-            elif c[:3:1] == "att":
-                arg1 = c[c.find("(")+1:c.find(","):1]
-                arg2 = c[c.find(",")+1:c.find(")")]
-                if arg1 in args and arg2 in args:
-                    attacksFrom[arg1].add(arg2)
-                else:
-                    print("Argument ", arg1 if arg2 in args else arg2, " is referenced in prefernces but not defined.")
-                    raise FormatSyntaxException("Argument referenced before initialization.")
-            elif c[:4:1] == "pref":
-                arg1 = c[c.find("(")+1:c.find(","):1]
-                arg2 = c[c.find(",")+1:c.find(")")]
-                if arg1 in args and arg2 in args and arg1 not in preferences[arg2]:
-                    preferences[arg1].add(arg2)
-                    for i in preferences[arg2]:
-                        preferences[arg1].add(i)
-                    for j in preferences.keys():
-                        if arg1 in preferences[j]:
-                            preferences[j].add(arg2)
-                elif arg1 in preferences[arg2]:
-                    print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
-                    raise PreferenceException("Ambiguious preferences")
-                else:
-                    print("Argument ", arg1 if arg2 in args else arg2, " is referenced in preferences but not defined.")
-                    raise FormatSyntaxException("Argument referenced before initialization.")
-            else:
-                raise FormatException(".papx format Exception, unknown identifier")
-            c = file.readline()
+        parse_papx(file)
     else:
         print("Unsupported format ", fileformat,", suported formats are : ")
         print_formats()
         raise UnsupportedFormatException("Unsuported format : ", fileformat)
     file.flush()
     file.close()
-    return(args, attacksFrom, preferences)
 
-def toFile(args, attacksFrom, outputFile = "AF", fileformat = "tgf"):
+def parse_ptgf(file):
+    c = file.readline()
+    ct = 0
+    while c != "":
+        if c == "\n":
+            continue
+        elif c == "#\n":
+            if ct<2:
+                ct += 1
+            else :
+                print("Error parsing the file, more than two #")
+                raise FormatException(".ptgf format Exception, more than two #")
+        elif(ct == 0):
+            parse_argument_ptgf(c)
+        elif ct == 1:
+            parse_attack_ptgf(c)
+        else:
+            parse_preference_ptgf(c)
+        c = file.readline()
+
+def parse_papx(file):
+    c = file.readline()
+    while c != "":
+        if c == "\n":
+            continue
+        elif c[:3:1] == "arg":
+            parse_argument_papx(c)
+        elif c[:3:1] == "att":
+            parse_attack_papx(c)
+        elif c[:4:1] == "pref":
+            parse_preference_papx(c)
+        else:
+            raise FormatException(".papx format Exception, unknown identifier")
+        c = file.readline()
+
+def parse_argument_ptgf(c):
+    arg = c[:c.find("\n")]
+    args.add(arg)
+    attacksFrom[arg] = set()
+    preferences[arg] = set()
+    
+def parse_argument_papx(c):
+    arg = c[c.find("(")+1:c.find(")"):1]
+    args.add(arg)
+    attacksFrom[arg] = set()
+    preferences[arg] = set()
+    
+def parse_attack_ptgf(c):
+    arg1 = c[:c.find(" "):1]
+    arg2 = c[c.find(" ")+1:c.find("\n"):1]
+    if arg1 in args and arg2 in args:
+        attacksFrom[arg1].add(arg2)
+    else:
+        print("Argument ", arg1 if arg2 in args else arg2, " is referenced in attacks but not defined.")
+        raise FormatSyntaxException("Argument referenced before initialization")
+
+def parse_attack_papx(c):
+    arg1 = c[c.find("(")+1:c.find(","):1]
+    arg2 = c[c.find(",")+1:c.find(")")]
+    if arg1 in args and arg2 in args:
+        attacksFrom[arg1].add(arg2)
+    else:
+        print("Argument ", arg1 if arg2 in args else arg2, " is referenced in prefernces but not defined.")
+        raise FormatSyntaxException("Argument referenced before initialization.")
+
+def parse_preference_ptgf(c):
+    arg1 = c[:c.find(" "):1]
+    arg2 = c[c.find(" ")+1::1] if c[-1]!="\n" else c[c.find(" ")+1:-1:1]
+    if arg1 in preferences[arg2]:
+        print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
+        raise PreferenceException("Ambiguious preferences")
+    elif arg1 in args and arg2 in args:
+        preferences[arg1].add(arg2)
+        for i in preferences[arg2]:
+            preferences[arg1].add(i)
+        for j in preferences.keys():
+            if arg1 in preferences[j]:
+                preferences[j].add(arg2)
+    else:
+        print("Argument ", arg1 if arg2 in args else arg2, " is referenced in prefernces but not defined.")
+        raise FormatSyntaxException("Argument referenced before initialization.")
+
+def parse_preference_papx(c):
+    arg1 = c[c.find("(")+1:c.find(","):1]
+    arg2 = c[c.find(",")+1:c.find(")")]
+    if arg1 in preferences[arg2]:
+        print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
+        raise PreferenceException("Ambiguious preferences")
+    elif arg1 in args and arg2 in args:
+        preferences[arg1].add(arg2)
+        for i in preferences[arg2]:
+            preferences[arg1].add(i)
+        for j in preferences.keys():
+            if arg1 in preferences[j]:
+                preferences[j].add(arg2)
+    else:
+        print("Argument ", arg1 if arg2 in args else arg2, " is referenced in preferences but not defined.")
+        raise FormatSyntaxException("Argument referenced before initialization.")
+                    
+def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     """
     Function writting the AF (after the reductions) in a file.
     The name of the file has to be written without the extension.
@@ -204,14 +251,14 @@ def toFile(args, attacksFrom, outputFile = "AF", fileformat = "tgf"):
         for i in args:
             file.write("".join([i,"\n"]))
         file.write("#\n")
-        for j in attacksFrom.keys():
-            for k in attacksFrom[j]:
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
                 file.write(''.join([j," ",k,"\n"]))
     elif fileformat == "apx":
         for i in args:
             file.write("arg({})\n".format(i))
-        for j in attacksFrom.keys():
-            for k in attacksFrom[j]:
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
                 file.write("att({},{})\n".format(j,k))
     else:
         print("Unsupported format ", fileformat,", suported formats are : ")
@@ -220,14 +267,11 @@ def toFile(args, attacksFrom, outputFile = "AF", fileformat = "tgf"):
     file.flush()
     file.close()
 
-def reduction1(args, attacksFrom, preferences, fileformat = "tgf"):
+def reduction1(fileformat = "tgf"):
     """
     Function applying the first reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
     """
-    assert type(args) is set, "The first argument of this method must be the set of arguments. (type Set)"
-    assert type(attacksFrom) is dict, "The second argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
-    assert type(preferences) is dict, "The third argument of this method must be the dictionary having for keys the arguments preferred and for values the arguments preferred over. (type Dictionary)"
     assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
@@ -237,17 +281,14 @@ def reduction1(args, attacksFrom, preferences, fileformat = "tgf"):
             if arg in preferences[j]:
                 copyAttacksFrom[arg].remove(j)
                 
-    toFile(args, copyAttacksFrom, "Reduction1-AF", fileformat)
+    toFile(copyAttacksFrom, "Reduction1-AF", fileformat)
 
-def reduction2(args, attacksFrom, preferences, fileformat = "tgf"):
+def reduction2(fileformat = "tgf"):
     """
     Function applying the second reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
     """
     
-    assert type(args) is set, "The first argument of this method must be the set of arguments. (type Set)"
-    assert type(attacksFrom) is dict, "The second argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
-    assert type(preferences) is dict, "The third argument of this method must be the dictionary having for keys the arguments preferred and for values the arguments preferred over. (type Dictionary)"
     assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
@@ -258,18 +299,15 @@ def reduction2(args, attacksFrom, preferences, fileformat = "tgf"):
                 copyAttacksFrom[arg].remove(j)
                 copyAttacksFrom[j].add(arg)
                 
-    toFile(args, copyAttacksFrom, "Reduction2-AF", fileformat)
+    toFile(copyAttacksFrom, "Reduction2-AF", fileformat)
     
-def reduction3(args, attacksFrom, preferences, fileformat = "tgf"):
+def reduction3(fileformat = "tgf"):
     """
     Function applying the third reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
     """
     
     
-    assert type(args) is set, "The first argument of this method must be the set of arguments. (type Set)"
-    assert type(attacksFrom) is dict, "The second argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
-    assert type(preferences) is dict, "The third argument of this method must be the dictionary having for keys the arguments preferred and for values the arguments preferred over. (type Dictionary)"
     assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
@@ -279,18 +317,15 @@ def reduction3(args, attacksFrom, preferences, fileformat = "tgf"):
             if arg in preferences[j] and arg in attacksFrom[j]:
                 copyAttacksFrom[arg].remove(j)
                 
-    toFile(args, copyAttacksFrom, "Reduction3-AF", fileformat)
+    toFile(copyAttacksFrom, "Reduction3-AF", fileformat)
     
-def reduction4(args, attacksFrom, preferences, fileformat = "tgf"):
+def reduction4(fileformat = "tgf"):
     """
     Function applying the fourth reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
     """
     
     
-    assert type(args) is set, "The first argument of this method must be the set of arguments. (type Set)"
-    assert type(attacksFrom) is dict, "The second argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
-    assert type(preferences) is dict, "The third argument of this method must be the dictionary having for keys the arguments preferred and for values the arguments preferred over. (type Dictionary)"
     assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
@@ -300,8 +335,40 @@ def reduction4(args, attacksFrom, preferences, fileformat = "tgf"):
             if arg in preferences[j]:
                 copyAttacksFrom[j].add(arg)
                 
-    toFile(args, copyAttacksFrom, "Reduction4-AF", fileformat)
+    toFile(copyAttacksFrom, "Reduction4-AF", fileformat)
     
+def parse_list(string):
+    """
+    Function allowing to extract the first appearing list in a String.
+    The elements of the list will be strings, stripped of the spaces, tabs and charriots.
+    str --> list
+    """
+    start = False
+    elemList = False #if an element of the list to parse is a list (in a string format)
+    out = []
+    arg = ''
+    for i in string:
+        if i == "[" and not start:
+            start = True
+        elif i == "[":
+            elemList = True
+        elif i == "]" and start:
+            if elemList:
+                elemList = False
+            else:
+                out.append(arg)
+                arg = ''
+                start = False
+                break
+        elif i ==",":
+            out.append(arg)
+            arg = ''
+        elif start:
+            arg += i
+    if start:
+        raise ParsingException("Never ending list to parse.")
+    return out
+            
 #On essaie en dessous de simuler un switch case avec les dictionnaires
 
 switcher_options = {
@@ -312,19 +379,21 @@ switcher_options = {
         }
 
 switcher_reductions = {
-        1 : reduction1,
-        2 : reduction2,
-        3 : reduction3,
-        4 : reduction4
+        "1" : reduction1,
+        "2" : reduction2,
+        "3" : reduction3,
+        "4" : reduction4
         }
 
-if argv.length == 2:
+if len(argv) == 2:
     switcher_options.get(argv[1])()
 
 else:
     if "-r" in argv:
-        switcher_reductions.get(argv[argv.index("-r")])()
-    elif "--r" in argv:
-        switcher_reductions.get(argv[argv.index("--r")])()
+        toPaf(argv[argv.index("-f")+1], argv[argv.index("-fo")+1])
+        if "-out" in argv:
+            outs = outputs()
+        else:
+            outs = ['stdout']
         
-os.system("./mu-toksia")
+        switcher_reductions.get(argv[argv.index("-r")+1])()
