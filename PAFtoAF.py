@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 28 2021
+Created on Mon May 31 2021
 
 @author: Eyal Cohen
 """
@@ -8,6 +8,7 @@ Created on Fri May 28 2021
 from sys import argv
 import os
 import copy
+import platform
 
 class UnsupportedFormatException(Exception):
     pass
@@ -24,16 +25,19 @@ class PreferenceException(Exception):
 class ParsingException(Exception):
     pass
 
+class CommandLineException(Exception):
+    pass
+
 #We define these here to share them between functions
 args = set()
 attacksFrom = dict()
 preferences = dict()
-    
+   
 def print_help():
     """
     Invoked when the user asks for help with the [--help] prameter
     """
-    print("-p <task> -f <file> -fo <format> -r <reduction> [-a <query>] [-out <filename(s)>] \n")
+    print("-p <task> -f <file> -fo <format> -r <reduction> [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
     print("<task> is the computational problem, use --problems to see the ones supported")
     print("<file> is the input, the preference-based argumentation framework")
     print("<format> file format for input PAF; for a list of available formats use option --formats")
@@ -42,6 +46,9 @@ def print_help():
     print("<filename> is the output for the resulting AF to be printed on, if you want the output to be on the terminal use stdout as filename.")
     print("If you wish to have multiple prints (for exemple one on the terminal and one on a file) state every file this way : [file1,file2,file3...]")
     print("The names of the files must contain their format (Exemple : [stdout, file.tgf, file2.apx])")
+    print("<solvername> is the name of the solver, if none is indicated, on linux mu-toksia will be chosen as default and on windows, jArgSemSAT will.")
+    print("<solverpath> is the path from the root to acces the solver.") 
+    print("If none is entered the program will scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.")
     print("Options :")
     print("--help prints this message")
     print("--problems prints the lists of available computational problems")
@@ -58,9 +65,7 @@ def print_problems():
             if problem == "CE-ID" or problem == "DC-ID" or problem == "EE-ID": #CE-ID = 1 so EE-ID = SE-ID and DC-ID = DS-ID so we only consider SE-ID and DS-ID
                 continue
             else:
-                print("[",problem,"]", sep = '', end = (", \n", "")[problem == "SE-ID"]) #just to avoid putting a , after the last problem (SE-ID)
-                if(i == "CO" or i == "PR" or i == "ST" or i == "GR"):
-                    print("[", problem,"-D","]", sep = '', end = ", \n")
+                print("[",problem,"]", sep = '', end = (", ", "")[problem == "SE-ID"]) #just to avoid putting a , after the last problem (SE-ID)
 
 def print_formats():
     print("Preference-based Trivial Graph Format [.ptgf]")
@@ -95,10 +100,11 @@ def outputs():
     None --> List  (None because it reads the command line and does not need any other input)
     """
     outputs = ''
-    i=1
-    while("]" not in outputs):
-        outputs += argv[argv.index("-out")+i]
-        i += 1
+    if "-out" in argv:
+        i=1
+        while("]" not in outputs):
+            outputs += argv[argv.index("-out")+i]
+            i += 1
     return(parse_list(outputs))
             
 def toPaf(inputFile, fileformat):
@@ -267,7 +273,29 @@ def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     file.flush()
     file.close()
 
-def reduction1(fileformat = "tgf"):
+def print_AF(newAttacksFrom, fileformat):
+    
+    assert type(fileformat) is str, "The argument of this method method must be the extension of the outputFile. (type Dictionary)"
+    
+    if fileformat == "tgf":
+        for i in args:
+            print("".join([i,"\n"]))
+        print("#\n")
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
+                print(''.join([j," ",k,"\n"]))
+    elif fileformat == "apx":
+        for i in args:
+            print("arg({})\n".format(i))
+        for j in newAttacksFrom.keys():
+            for k in newAttacksFrom[j]:
+                print("att({},{})\n".format(j,k))
+    else:
+        print("Unsupported format ", fileformat,", suported formats are : ")
+        print_formats()
+        raise UnsupportedFormatException("Unsuported format : ", fileformat)
+
+def reduction1(outs = ["Reduction1-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the first reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
@@ -281,9 +309,13 @@ def reduction1(fileformat = "tgf"):
             if arg in preferences[j]:
                 copyAttacksFrom[arg].remove(j)
                 
-    toFile(copyAttacksFrom, "Reduction1-AF", fileformat)
+    for output in outs:
+        if output == "stdout":
+            print_AF(copyAttacksFrom, fileformat)
+            continue
+        toFile(copyAttacksFrom, output, fileformat)
 
-def reduction2(fileformat = "tgf"):
+def reduction2(outs = ["Reduction2-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the second reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
@@ -299,9 +331,13 @@ def reduction2(fileformat = "tgf"):
                 copyAttacksFrom[arg].remove(j)
                 copyAttacksFrom[j].add(arg)
                 
-    toFile(copyAttacksFrom, "Reduction2-AF", fileformat)
+    for output in outs:
+        if output == "stdout":
+            print_AF(copyAttacksFrom, fileformat)
+            continue
+        toFile(copyAttacksFrom, output, fileformat)
     
-def reduction3(fileformat = "tgf"):
+def reduction3(outs = ["Reduction3-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the third reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
@@ -317,9 +353,13 @@ def reduction3(fileformat = "tgf"):
             if arg in preferences[j] and arg in attacksFrom[j]:
                 copyAttacksFrom[arg].remove(j)
                 
-    toFile(copyAttacksFrom, "Reduction3-AF", fileformat)
+    for output in outs:
+        if output == "stdout":
+            print_AF(copyAttacksFrom, fileformat)
+            continue
+        toFile(copyAttacksFrom, output, fileformat)
     
-def reduction4(fileformat = "tgf"):
+def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the fourth reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
@@ -335,8 +375,20 @@ def reduction4(fileformat = "tgf"):
             if arg in preferences[j]:
                 copyAttacksFrom[j].add(arg)
                 
-    toFile(copyAttacksFrom, "Reduction4-AF", fileformat)
+    for output in outs:
+        if output == "stdout":
+            print_AF(copyAttacksFrom, fileformat)
+            continue
+        toFile(copyAttacksFrom, output, fileformat)
     
+def solverOutput(solver, path = None, scan = False,): #TODO
+    if (path is None) or scan:
+        scan = True
+        for file in os.scandir():
+            if os.fsdecode(file) == solver
+            if file.is_dir():
+                solverOutput(solver, file.path, scan)
+        
 def parse_list(string):
     """
     Function allowing to extract the first appearing list in a String.
@@ -389,11 +441,46 @@ if len(argv) == 2:
     switcher_options.get(argv[1])()
 
 else:
+    if "-f" in argv:
+        file = argv[argv.index("-f")+1]
+    else:
+        raise CommandLineException("Please specify the input file, using the -f parameter, in the command line.")
+    if "-fo" in argv:
+        fileformat = argv[argv.index("-fo")+1]
+        if fileformat not in ["papx","ptgf"]:
+            raise UnsupportedFormatException("Unsupported format {}. Supported formats are papx and ptgf.\nUse --formats for more information.".format(fileformat))
+    else:
+        print("Please specify the file's format, using the -fo parameter, in the command line.")
+        print("Here are the available formats :")
+        print_formats()
+        raise CommandLineException("Please specify the file's format, using the -fo parameter, in the command line.")
     if "-r" in argv:
-        toPaf(argv[argv.index("-f")+1], argv[argv.index("-fo")+1])
+        reduction = argv[argv.index("-r")+1]
+        toPaf(file, fileformat)
+        outs = []
         if "-out" in argv:
             outs = outputs()
+        if "-p" in argv:
+            task = argv[argv.index("-p")+1]
+            outs.append("Reduction{}-AF-tmp.{}".format(reduction, 'tgf'if fileformat == "ptgf" else "apx"))
+        switcher_reductions.get(argv[argv.index("-r")+1])(outs, 'tgf'if fileformat == "ptgf" else "apx")
+    if "-p" in argv:
+        if "-s" in argv:
+            solver = argv[argv.index("-s")+1]
         else:
-            outs = ['stdout']
+            if platform.system() in ["Linux", "Darwin"]:
+                solver = "mu-toksia"
+            elif patform.system() == "Windows":
+                solver = "jArgSemSAT"
+            else :
+                print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
+        if "-sp" in argv:
+            path = argv[argv.index("-sp")+1]
+        else:
+            path = None
+            scan = True
+        sysOutput = solverOutput(solver, path, scan)
         
-        switcher_reductions.get(argv[argv.index("-r")+1])()
+        #Still working on solverOutput line 384 : 
+        #Have to understand how fsdecode(), is_dir() and many other os methode work
+            
