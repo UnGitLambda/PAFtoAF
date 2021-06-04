@@ -6,6 +6,7 @@ Created on Mon May 31 2021
 """
 
 from sys import argv
+from _io import TextIOWrapper
 import os
 import copy
 import platform
@@ -26,6 +27,9 @@ class ParsingException(Exception):
     pass
 
 class CommandLineException(Exception):
+    pass
+
+class FindingSolverException(Exception):
     pass
 
 #We define these here to share them between functions
@@ -93,6 +97,10 @@ def print_reductions():
     print("R3 : att(1,2) is kept in the AF.")
     print("R4 : att(1,2) and att(2,1) are in the resulting AF.\n")
 
+def print_informations():
+    print("PAFtoAF version 1.0")
+    print("Author : Eyal Cohen")
+
 def outputs():
     """
     Method that uses the sys.argv list to find the indicated outputs in it (thanks to the -out <filename(s)>).
@@ -141,6 +149,18 @@ def toPaf(inputFile, fileformat):
     file.close()
 
 def parse_ptgf(file):
+    """
+    Parser allowing to extract a PAF from a file (opened using the open method) in the ptgf format.
+    For the method to work you must have :
+        -a global set called args, representing the arguments
+        -a global dictionary called attacksFrom, where arg1 attacks arg2 is represented by arg2 in attacksFrom[arg1]
+        -a global dictionary called prefernces, where arg1>arg2 is representedby arg2 in preferences[arg1]
+    (global here is used to imply "global in front of this method")
+    TextIoWrapper -> None (because it writes on the already existing set and dictionaries)
+    """
+    
+    assert type(file) is TextIOWrapper, "The agument of this method must be a file, opened using the open function, on which this will parse a PAF in the ptgf format. (type TextIOWrapper)"
+    
     c = file.readline()
     ct = 0
     while c != "":
@@ -151,7 +171,7 @@ def parse_ptgf(file):
                 ct += 1
             else :
                 print("Error parsing the file, more than two #")
-                raise FormatException(".ptgf format Exception, more than two #")
+                raise FormatSyntaxException(".ptgf format Exception, more than two #")
         elif(ct == 0):
             parse_argument_ptgf(c)
         elif ct == 1:
@@ -161,6 +181,18 @@ def parse_ptgf(file):
         c = file.readline()
 
 def parse_papx(file):
+    """
+    Parser allowing to extract a PAF from a file (opened using the open method) in the papx format.
+    For the method to work you must have :
+        -a global set called args, representing the arguments
+        -a global dictionary called attacksFrom, where arg1 attacks arg2 is represented by arg2 in attacksFrom[arg1]
+        -a global dictionary called prefernces, where arg1>arg2 is representedby arg2 in preferences[arg1]
+    (global here is used to imply "global in front of this method")
+    TextIoWrapper -> None (because it writes on the already existing set and dictionaries)
+    """
+    
+    assert type(file) is TextIOWrapper, "The agument of this method must be a file, opened using the open function, on which this will parse a PAF in the ptgf format. (type TextIOWrapper)"
+    
     c = file.readline()
     while c != "":
         if c == "\n":
@@ -172,43 +204,89 @@ def parse_papx(file):
         elif c[:4:1] == "pref":
             parse_preference_papx(c)
         else:
-            raise FormatException(".papx format Exception, unknown identifier")
+            raise FormatSyntaxException(".papx format Exception, unknown identifier")
         c = file.readline()
 
 def parse_argument_ptgf(c):
+    """
+    Parser allowing to extract an argument from a string in the ptgf (or tgf) format.
+    This method is invoked in parse_ptgf, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format ptgf (or tgf). (type String)"
+    
     arg = c[:c.find("\n")]
     args.add(arg)
     attacksFrom[arg] = set()
     preferences[arg] = set()
     
 def parse_argument_papx(c):
+    """
+    Parser allowing to extract an argument from a string in the papx (or apx) format.
+    This method is invoked in parse_papx, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format papx (or apx). (type String)"
+    
     arg = c[c.find("(")+1:c.find(")"):1]
     args.add(arg)
     attacksFrom[arg] = set()
     preferences[arg] = set()
     
-def parse_attack_ptgf(c):  #TODO cases where only one arg is stipulated
+def parse_attack_ptgf(c):
+    """
+    Parser allowing to extract an attack from a string in the ptgf (or tgf) format.
+    This method is invoked in parse_ptgf, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format ptgf (or tgf). (type String)"
+    
     arg1 = c[:c.find(" "):1]
     arg2 = c[c.find(" ")+1:c.find("\n"):1]
-    if arg1 in args and arg2 in args:
+    if arg2 == "":
+        raise FormatSyntaxException("Single argument found while parsing attacks : {}.".format(arg1))
+    elif arg1 in args and arg2 in args:
         attacksFrom[arg1].add(arg2)
     else:
         print("Argument ", arg1 if arg2 in args else arg2, " is referenced in attacks but not defined.")
         raise FormatSyntaxException("Argument referenced before initialization")
 
 def parse_attack_papx(c):
+    """
+    Parser allowing to extract an attack from a string in the papx (or apx) format.
+    This method is invoked in parse_papx, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format papx (or apx). (type String)"
+    
     arg1 = c[c.find("(")+1:c.find(","):1]
     arg2 = c[c.find(",")+1:c.find(")")]
-    if arg1 in args and arg2 in args:
+    if arg1 == "" or arg2 == "":
+        raise FormatSyntaxException("Single argument found while parsing attacks : att({},{}).".format(arg1,arg2))
+    elif arg1 in args and arg2 in args:
         attacksFrom[arg1].add(arg2)
     else:
         print("Argument ", arg1 if arg2 in args else arg2, " is referenced in prefernces but not defined.")
         raise FormatSyntaxException("Argument referenced before initialization.")
 
 def parse_preference_ptgf(c):
+    """
+    Parser allowing to extract a preference from a string in the ptgf (or tgf) format.
+    This method is invoked in parse_ptgf, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format ptgf (or tgf). (type String)"
+    
     arg1 = c[:c.find(" "):1]
     arg2 = c[c.find(" ")+1::1] if c[-1]!="\n" else c[c.find(" ")+1:-1:1]
-    if arg1 in preferences[arg2]:
+    if arg2 == "":
+        raise FormatSyntaxException("Single argument found while parsing preferences : {}.".format(arg1))
+    elif arg1 in preferences[arg2]:
         print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
         raise PreferenceException("Ambiguious preferences")
     elif arg1 in args and arg2 in args:
@@ -223,9 +301,19 @@ def parse_preference_ptgf(c):
         raise FormatSyntaxException("Argument referenced before initialization.")
 
 def parse_preference_papx(c):
+    """
+    Parser allowing to extract a perference from a string in the papx (or apx) format.
+    This method is invoked in parse_papx, and for it to work the condition stipulated in the latter must be respected.
+    str-->None
+    """
+    
+    assert type(c) is str, "The argument in this method must be a string containing an argument in the format papx (or apx). (type String)"
+    
     arg1 = c[c.find("(")+1:c.find(","):1]
     arg2 = c[c.find(",")+1:c.find(")")]
-    if arg1 in preferences[arg2]:
+    if arg1 == "" or arg2 == "":
+        raise FormatSyntaxException("Single argument found while parsing attacks : pref({},{}).".format(arg1,arg2))
+    elif arg1 in preferences[arg2]:
         print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
         raise PreferenceException("Ambiguious preferences")
     elif arg1 in args and arg2 in args:
@@ -254,9 +342,9 @@ def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     
     file = open(''.join([outputFile, ".", fileformat]) , "w+")
     if fileformat == "tgf":
-        write_tgf(file)
+        write_tgf(newAttacksFrom, file)
     elif fileformat == "apx":
-        write_apx(file)
+        write_apx(newAttacksFrom, file)
     else:
         print("Unsupported format ", fileformat,", suported formats are : ")
         print_formats()
@@ -264,36 +352,91 @@ def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     file.flush()
     file.close()
 
-def write_tgf(file):
+def write_tgf(newAttacksFrom, file):
+    """
+    Invoked to write down an AF on a file to the tgf format.
+    dict*TextIOWrapper --> file
+    """
+    
+    assert type(attacksFrom) is dict, "The first argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
+    assert type(file) is TextIOWrapper, "The second argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+     
     for i in args:
-            write_arg_tgf(file,i)
-        file.write("#\n")
-        for j in newAttacksFrom.keys():
-            for k in newAttacksFrom[j]:
-                write_att_tgf(file,j,k)
+        write_arg_tgf(file,i)
+    file.write("#\n")
+    for j in newAttacksFrom.keys():
+        for k in newAttacksFrom[j]:
+            write_att_tgf(file,j,k)
 
 def write_arg_tgf(file, arg):
+    """
+    Invoked to write down a sinle argument on a file to the tgf format.
+    dict*TextIOWrapper --> None
+    """
+    assert type(file) is TextIOWrapper, "The first argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+    assert type(arg) is str, "The second argument of this method must be the argument to write down. (type String)"
+    
     file.write("".join([arg,"\n"]))
 
 def write_att_tgf(file, arg1, arg2):
+    """
+    Invoked to write down a sinle attack on a file to the tgf format.
+    dict*TextIOWrapper --> None
+    """
+    
+    assert type(file) is TextIOWrapper, "The first argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+    assert type(arg1) is str, "The second argument of this method must be the first argument in the attack to write down. (type String)"
+    assert type(arg2) is str, "The third argument of this method must be the second argument in the attack to write down. (type String)"
+    
     file.write(''.join([arg1," ",arg2,"\n"]))
 
-def write_apx(file):
+def write_apx(newAttacksFrom, file):
+    """
+    Invoked to write down an AF on a file to the apx format.
+    dict*TextIOWrapper --> file
+    """
+    
+    assert type(attacksFrom) is dict, "The first argument of this method must be the dictionary having for keys the arguments attacking and for values the arguments attacked. (type Dictionary)"
+    assert type(file) is TextIOWrapper, "The second argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+    
     for i in args:
-            write_arg_apx(file, i)
-        for j in newAttacksFrom.keys():
-            for k in newAttacksFrom[j]:
-                write_att_apx(file,j,k)
+        write_arg_apx(file, i)
+    for j in newAttacksFrom.keys():
+        for k in newAttacksFrom[j]:
+            write_att_apx(file,j,k)
 
 def write_arg_apx(file, arg):
+    """
+    Invoked to write down a sinle argument on a file to the apx format.
+    dict*TextIOWrapper --> None
+    """
+    
+    assert type(file) is TextIOWrapper, "The first argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+    assert type(arg) is str, "The second argument of this method must be the argument to write down. (type String)"
+    
     file.write("arg({})\n".format(arg))
 
 def write_att_apx(file, arg1, arg2):
+    """
+    Invoked to write down a sinle attack on a file to the apx format.
+    dict*TextIOWrapper --> None
+    """
+    
+    assert type(file) is TextIOWrapper, "The first argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
+    assert type(arg1) is str, "The second argument of this method must be the first argument in the attack to write down. (type String)"
+    assert type(arg2) is str, "The third argument of this method must be the second argument in the attack to write down. (type String)"
+    
     file.write("att({},{})\n".format(arg1,arg2))
 
 def print_AF(newAttacksFrom, fileformat):
+    """
+    Invoked when the user uses stdout as a wanted output.
+    This method prints the AF resulting from the reductions asked on the terminal.
+    dict*str --> None
+    """
     
-    assert type(fileformat) is str, "The argument of this method method must be the extension of the outputFile. (type Dictionary)"
+    assert type(newAttacksFrom) is dict, "The first argument ofthis method must be a dictionary containing the attacks in the AF, needed to be printed. (type Dict)"
+    assert type(fileformat) is str, "The second argument of this method method must be the extension of the outputFile. (type Dictionary)"
     
     if fileformat == "tgf":
         for i in args:
@@ -318,7 +461,9 @@ def reduction1(outs = ["Reduction1-AF.tgf"], fileformat = "tgf"):
     Function applying the first reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
     dict*dict*dict*str --> file
     """
-    assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
+    
+    assert type(outs) is list, "The first argument of this method must be the list of every file the resulting AF is to be written on. (type List)"
+    assert type(fileformat) is str, "The second argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
     
@@ -339,7 +484,8 @@ def reduction2(outs = ["Reduction2-AF.tgf"], fileformat = "tgf"):
     dict*dict*dict*str --> file
     """
     
-    assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
+    assert type(outs) is list, "The first argument of this method must be the list of every file the resulting AF is to be written on. (type List)"
+    assert type(fileformat) is str, "The second argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
     
@@ -361,8 +507,8 @@ def reduction3(outs = ["Reduction3-AF.tgf"], fileformat = "tgf"):
     dict*dict*dict*str --> file
     """
     
-    
-    assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
+    assert type(outs) is list, "The first argument of this method must be the list of every file the resulting AF is to be written on. (type List)"
+    assert type(fileformat) is str, "The second argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
     
@@ -383,8 +529,8 @@ def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
     dict*dict*dict*str --> file
     """
     
-    
-    assert type(fileformat) is str, "The fourth argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
+    assert type(outs) is list, "The first argument of this method must be the list of every file the resulting AF is to be written on. (type List)"
+    assert type(fileformat) is str, "The second argument of this method must be the format the resulting file (containing the AF) will be. (type String)"
     
     copyAttacksFrom = copy.deepcopy(attacksFrom)
     
@@ -399,28 +545,64 @@ def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
             continue
         toFile(copyAttacksFrom, output, fileformat)
     
-def solverOutput(solver, path = None, scan = False): #TODO
-    if (path is None) or scan:
+def solverOutput(solver, Path = None, scan = False):
+    """
+    Invoked when the -p parameter is used.
+    The script then looks for the solver and executes it.
+    This method does this part and then return a list of strings, containing the lines composing the output of the solver.
+    str*str*bool-->str*
+    """
+    
+    assert type(solver) is str, "The first argument of this method must be the name of the solver. (type String)"
+    assert (type(Path) is str or type(Path) is type(None)), "The second argument of this method must be the path to the solver or to the directory containing the solver (if the solver's name is indicated). (type String, default = None)"
+    assert type(scan) is bool, "The thirst argument to this method must be a boolean indicating if we must (or not) scan the directory indicated by the path (if the path is a directory indeed). (type Boolean, default = false)"
+    
+    output = ''
+    if (Path is None) or scan:
         scan = True
-        for file in os.scandir():
-            if os.fsdecode(file) == solver:
-                os.system(file.path)
-            if file.is_dir():
-                solverOutput(solver, file.path, scan)
-    if(path not is None):
-        if os.is_dir(path):
-            solverOutput(solver, path, True)
+        if not os.path.isdir(Path):
+            output = solverOutput(solver, path, False)
         else:
-            try:
-                output = os.popen(path).readlines()
-            except(#TODO)
+            for file in os.scandir():
+                if os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver:
+                    try:
+                        output = os.popen(file.path).readlines()
+                    except:
+                        raise FindingSolverException("Unable to find the solver.")
+    elif(Path is not None):
+        Path = Path.replace(".\\", "/")
+        if os.path.isdir(Path):
+            try :
+                os.chdir(Path)
+                dirPath = Path[:Path.find(solver)+1]
+                Path = Path[len(dirPath)::]
+            except:
+                raise FindingSolverException("Something in the path is not right, unable to access a directory.")
+            output = solverOutput(solver, solver)
+        else :
+            dirPath = Path[:Path.find(solver)]
+            if len(dirPath)>1:
+                try :
+                    os.chdir(dirPath)
+                except:
+                    raise FindingSolverException("Something in the path is not right, unable to access a directory.")
+            Path = Path[len(dirPath)::]
+            output = os.popen(Path).readlines()
+    if output=='' :
+        raise FindingSolverException("Unable to find the solver.")
+    return(output)
+     
         
 def parse_list(string):
     """
-    Function allowing to extract the first appearing list in a String.
+    Parser allowing to extract the first appearing list in a String.
+    If there is no list in the string, the return will be an empty list.
     The elements of the list will be strings, stripped of the spaces, tabs and charriots.
     str --> list
     """
+    
+    assert type(string) is string, "This method parses a string and returns the first list it founds inside of it.\nHenceforth the argument must be a string to parse. (type String)"
+    
     start = False
     elemList = False #if an element of the list to parse is a list (in a string format)
     out = []
@@ -453,7 +635,8 @@ switcher_options = {
         "--help" : print_help,
         "--problems" : print_problems,
         "--formats" : print_formats,
-        "--reductions" : print_reductions
+        "--reductions" : print_reductions,
+        "--informations" : print_informations
         }
 
 switcher_reductions = {
@@ -463,7 +646,10 @@ switcher_reductions = {
         "4" : reduction4
         }
 
-if len(argv) == 2:
+if len(argv) == 1:
+    print_informations()
+
+elif len(argv) == 2:
     switcher_options.get(argv[1])()
 
 else:
@@ -493,11 +679,13 @@ else:
     if "-p" in argv:
         if "-s" in argv:
             solver = argv[argv.index("-s")+1]
+        elif "-sp" in argv:
+            solverPath = argv[argv.index("-sp")]
         else:
             if platform.system() in ["Linux", "Darwin"]:
-                solver = "mu-toksia"
-            elif patform.system() == "Windows":
-                solver = "jArgSemSAT"
+                solver = "mu-toksia.exe"
+            elif platform.system() == "Windows":
+                solver = "jArgSemSAT.java"
             else :
                 print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
         if "-sp" in argv:
@@ -506,8 +694,11 @@ else:
             solver = None
             path = None
             scan = True
-        sysOutput = solverOutput(solver, path, scan)
-        
-        #Still working on solverOutput line 384 : 
-        #Have to understand how fsdecode(), is_dir() and many other os methode work
+        try:
+            sysOutput = solverOutput(solver, path, scan)
+        except(FindingSolverException):
+            print("Your solver was to hard to find, please provide it's name with the -s parameter and it's path thanks to the-sp parameter.\n Also please be sure that the solver is at the right place.")
+        except(RecursionError):
+            print("Your solver is to hard to find, the recursion error was reached.")
             
+            #TODO try working on subdividing existing methods in smaller and easier ones to improve the code readability, transportability and ability to be modified
