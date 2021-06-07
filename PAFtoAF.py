@@ -10,6 +10,7 @@ from _io import TextIOWrapper
 import os
 import copy
 import platform
+import pathlib as pl
 
 class UnsupportedFormatException(Exception):
     pass
@@ -30,6 +31,9 @@ class CommandLineException(Exception):
     pass
 
 class FindingSolverException(Exception):
+    pass
+
+class UnsupportedOSException(Exception):
     pass
 
 #We define these here to share them between functions
@@ -330,8 +334,6 @@ def parse_preference_papx(c):
 def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     """
     Function writting the AF (after the reductions) in a file.
-    The name of the file has to be written without the extension.
-    Otherwise the name of the resulting file will be something like this : file.extension.extension.
     set*dict*str*str --> None
     """
    
@@ -340,7 +342,7 @@ def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     assert type(outputFile) is str, "The third argument of this method must be the name of the outputFile. (type String)"
     assert type(fileformat) is str, "The last/fourth argument of this method method must be the extension of the outputFile. (type Dictionary)"
     
-    file = open(''.join([outputFile, ".", fileformat]) , "w+")
+    file = open(outputFile , "w+")
     if fileformat == "tgf":
         write_tgf(newAttacksFrom, file)
     elif fileformat == "apx":
@@ -545,7 +547,7 @@ def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
             continue
         toFile(copyAttacksFrom, output, fileformat)
     
-def solverOutput(solver, Path = None, scan = False):
+def solverOutput(solver, path = ".", scan = False, solverArgv = argv):
     """
     Invoked when the -p parameter is used.
     The script then looks for the solver and executes it.
@@ -554,23 +556,27 @@ def solverOutput(solver, Path = None, scan = False):
     """
     
     assert type(solver) is str, "The first argument of this method must be the name of the solver. (type String)"
-    assert (type(Path) is str or type(Path) is type(None)), "The second argument of this method must be the path to the solver or to the directory containing the solver (if the solver's name is indicated). (type String, default = None)"
+    assert type(path) is str, "The second argument of this method must be the path to the solver or to the directory containing the solver (if the solver's name is indicated). (type String, default = '.')"
     assert type(scan) is bool, "The thirst argument to this method must be a boolean indicating if we must (or not) scan the directory indicated by the path (if the path is a directory indeed). (type Boolean, default = false)"
+    assert type(solverArgv) is list, "The fourth argument of this method are the arguments to pass on to the solver in the command line. (type List)"
     
+    Path = pl.PureWindowsPath(path)
     output = ''
-    if (Path is None) or scan:
+    commandLine = ''
+    for i in solverArgv[1::]:
+        commandLine += i+" "
+    if (Path == ".") or scan:
         scan = True
         if not os.path.isdir(Path):
-            output = solverOutput(solver, path, False)
+            output = solverOutput(solver, Path, False, solverArgv)
         else:
             for file in os.scandir():
                 if os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver:
                     try:
-                        output = os.popen(file.path).readlines()
+                        output = os.popen(file.path + ' ' + commandLine).readlines()
                     except:
                         raise FindingSolverException("Unable to find the solver.")
     elif(Path is not None):
-        Path = Path.replace(".\\", "/")
         if os.path.isdir(Path):
             try :
                 os.chdir(Path)
@@ -578,16 +584,14 @@ def solverOutput(solver, Path = None, scan = False):
                 Path = Path[len(dirPath)::]
             except:
                 raise FindingSolverException("Something in the path is not right, unable to access a directory.")
-            output = solverOutput(solver, solver)
+            output = solverOutput(solver, solver, False, solverArgv)
         else :
-            dirPath = Path[:Path.find(solver)]
-            if len(dirPath)>1:
-                try :
-                    os.chdir(dirPath)
-                except:
-                    raise FindingSolverException("Something in the path is not right, unable to access a directory.")
-            Path = Path[len(dirPath)::]
-            output = os.popen(Path).readlines()
+            dirPath = Path.parent
+            try :
+                os.chdir(dirPath)
+            except:
+                raise FindingSolverException("Something in the path is not right, unable to access a directory.")
+            output = os.popen(Path.__str__() + ' ' + commandLine).readlines()
     if output=='' :
         raise FindingSolverException("Unable to find the solver.")
     return(output)
@@ -601,7 +605,7 @@ def parse_list(string):
     str --> list
     """
     
-    assert type(string) is string, "This method parses a string and returns the first list it founds inside of it.\nHenceforth the argument must be a string to parse. (type String)"
+    assert type(string) is str, "This method parses a string and returns the first list it founds inside of it.\nHenceforth the argument must be a string to parse. (type String)"
     
     start = False
     elemList = False #if an element of the list to parse is a list (in a string format)
@@ -620,9 +624,10 @@ def parse_list(string):
                 arg = ''
                 start = False
                 break
-        elif i ==",":
-            out.append(arg)
-            arg = ''
+        elif i == ",":
+           if not elemList: 
+                out.append(arg)
+                arg = ''
         elif start:
             arg += i
     if start:
@@ -653,6 +658,7 @@ elif len(argv) == 2:
     switcher_options.get(argv[1])()
 
 else:
+    solverArgv = argv.copy()
     if "-f" in argv:
         file = argv[argv.index("-f")+1]
     else:
@@ -661,6 +667,7 @@ else:
         fileformat = argv[argv.index("-fo")+1]
         if fileformat not in ["papx","ptgf"]:
             raise UnsupportedFormatException("Unsupported format {}. Supported formats are papx and ptgf.\nUse --formats for more information.".format(fileformat))
+        solverArgv[argv.index("-fo")+1] = "tgf" if fileformat == "ptgf" else "apx"
     else:
         print("Please specify the file's format, using the -fo parameter, in the command line.")
         print("Here are the available formats :")
@@ -669,9 +676,16 @@ else:
     if "-r" in argv:
         reduction = argv[argv.index("-r")+1]
         toPaf(file, fileformat)
+        solverArgv.remove("-r")
+        solverArgv.remove(reduction)
         outs = []
         if "-out" in argv:
             outs = outputs()
+            i = argv.index("-out")
+            while "]" not in argv[i]:
+                solverArgv.remove(argv[i])
+                i+=1
+            solverArgv.remove(argv[i])
         if "-p" in argv:
             task = argv[argv.index("-p")+1]
             outs.append("Reduction{}-AF-tmp.{}".format(reduction, 'tgf'if fileformat == "ptgf" else "apx"))
@@ -679,8 +693,8 @@ else:
     if "-p" in argv:
         if "-s" in argv:
             solver = argv[argv.index("-s")+1]
-        elif "-sp" in argv:
-            solverPath = argv[argv.index("-sp")]
+            solverArgv.remove("-s")
+            solverArgv.remove(solver)
         else:
             if platform.system() in ["Linux", "Darwin"]:
                 solver = "mu-toksia.exe"
@@ -688,17 +702,27 @@ else:
                 solver = "jArgSemSAT.java"
             else :
                 print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
+                raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.")
         if "-sp" in argv:
             path = argv[argv.index("-sp")+1]
+            solverArgv.remove("-sp")
+            solverArgv.remove(path)
+            scan = False
         else:
-            solver = None
-            path = None
+            path = "."
             scan = True
         try:
-            sysOutput = solverOutput(solver, path, scan)
+            solverArgv[solverArgv.index("-f")+1] = "Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx")
+            sysOutput = solverOutput(solver, path, scan, solverArgv)
+            for i in sysOutput:
+                print(i)
         except(FindingSolverException):
             print("Your solver was to hard to find, please provide it's name with the -s parameter and it's path thanks to the-sp parameter.\n Also please be sure that the solver is at the right place.")
+            raise FindingSolverException("Your solver was to hard to find.")
         except(RecursionError):
             print("Your solver is to hard to find, the recursion error was reached.")
+            raise RecursionError("Your solver was to hard to find.")
+        finally:
+            os.remove("Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx"))
             
-            #TODO try working on subdividing existing methods in smaller and easier ones to improve the code readability, transportability and ability to be modified
+        #TODO try working on subdividing existing methods in smaller and easier ones to improve the code readability, transportability and ability to be modified
