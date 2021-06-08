@@ -7,6 +7,7 @@ Created on Mon May 31 2021
 
 from sys import argv
 from _io import TextIOWrapper
+from os import DirEntry
 import os
 import copy
 import platform
@@ -40,7 +41,7 @@ class UnsupportedOSException(Exception):
 args = set()
 attacksFrom = dict()
 preferences = dict()
-   
+
 def print_help():
     """
     Invoked when the user asks for help with the [--help] prameter
@@ -58,11 +59,12 @@ def print_help():
     print("<solverpath> is the path from the root to acces the solver.") 
     print("If none is entered the program will scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.")
     print("Options :")
-    print("--help prints this message")
-    print("--problems prints the lists of available computational problems")
-    print("--formats prints the list of accepted file formats")
-    print("--reductions prints the available reductions for a PAF")
-    
+    print("--help prints this message.")
+    print("--problems prints the lists of available computational problems.")
+    print("--formats prints the list of accepted file formats.")
+    print("--reductions prints the available reductions for a PAF.")
+    print("--informations for informations about the version and the author.")
+
 def print_problems():
     """
     Invoked when the user wishes to see the available prblems with the [--problems] parameter
@@ -104,6 +106,14 @@ def print_reductions():
 def print_informations():
     print("PAFtoAF version 1.0")
     print("Author : Eyal Cohen")
+
+switcher_options = {
+        "--help" : print_help,
+        "--problems" : print_problems,
+        "--formats" : print_formats,
+        "--reductions" : print_reductions,
+        "--informations" : print_informations
+        }
 
 def outputs():
     """
@@ -560,43 +570,71 @@ def solverOutput(solver, path = ".", scan = False, solverArgv = argv):
     assert type(scan) is bool, "The thirst argument to this method must be a boolean indicating if we must (or not) scan the directory indicated by the path (if the path is a directory indeed). (type Boolean, default = false)"
     assert type(solverArgv) is list, "The fourth argument of this method are the arguments to pass on to the solver in the command line. (type List)"
     
-    Path = pl.PureWindowsPath(path)
     output = ''
-    commandLine = ''
-    for i in solverArgv[1::]:
-        commandLine += i+" "
-    if (Path == ".") or scan:
-        scan = True
-        if not os.path.isdir(Path):
-            output = solverOutput(solver, Path, False, solverArgv)
-        else:
-            for file in os.scandir():
-                if os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver:
-                    try:
-                        output = os.popen(file.path + ' ' + commandLine).readlines()
-                    except:
-                        raise FindingSolverException("Unable to find the solver.")
-    elif(Path is not None):
-        if os.path.isdir(Path):
-            try :
-                os.chdir(Path)
-                dirPath = Path[:Path.find(solver)+1]
-                Path = Path[len(dirPath)::]
-            except:
-                raise FindingSolverException("Something in the path is not right, unable to access a directory.")
-            output = solverOutput(solver, solver, False, solverArgv)
-        else :
-            dirPath = Path.parent
-            try :
-                os.chdir(dirPath)
-            except:
-                raise FindingSolverException("Something in the path is not right, unable to access a directory.")
-            output = os.popen(Path.__str__() + ' ' + commandLine).readlines()
+    try:
+        output = os.popen(solverExecutableCommand(solver,path, scan, solverArgv)).readlines()
+    except:
+        raise FindingSolverException("Unable to execute the solver.")
     if output=='' :
         raise FindingSolverException("Unable to find the solver.")
     return(output)
-     
-        
+    
+def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
+    """
+    Method used to create the command line to execute the solver.
+    str*str*bool*list --> str
+    """
+    
+    assert type(solver) is str, "The first argument of this method must be the name of the solver. (type String)"
+    assert type(path) is str, "The second argument of this method must be the path to the solver or to the directory containing the solver (if the solver's name is indicated). (type String, default = '.')"
+    assert type(scan) is bool, "The thirst argument to this method must be a boolean indicating if we must (or not) scan the directory indicated by the path (if the path is a directory indeed). (type Boolean, default = false)"
+    assert type(Argv) is list, "The fourth argument of this method are the arguments to pass on to the solver in the command line. (type List)"
+    
+    Path = pl.PureWindowsPath(path)
+    paramSolver = commandLine(Argv)
+    if (Path == pl.Path(".")) or scan:
+        if not os.path.isdir(Path):
+            execCommand = solverExecutableCommand(solver, Path, False, Argv)
+        else:
+            for file in os.scandir():
+                if solverName(file, solver):
+                    execCommand = file.path + ' ' + commandLine(Argv)
+    elif Path is not None:
+        if os.path.isdir(Path):
+            try :
+                os.chdir(Path)
+            except:
+                raise FindingSolverException("Something in the path is not right, unable to access a directory.")
+            execCommand = solverExecutableCommand(solver, solver, False, Argv)
+        else:
+            execCommand = Path.__str__() + ' ' + paramSolver
+    return(execCommand)
+
+
+def solverName(file, solver):
+    """
+    Method checking if a file has the same name as the solver, it is basicaly just a boolean.
+    DirEntry * str --> bool
+    """
+    
+    assert type(file) is DirEntry, "The first argument in this method is the file we want to compare to the solver. (type DirEntry)"
+    assert type(solver) is str, "The second argument of this method must be the name of the solver. (type String)"
+    
+    return(os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver)
+
+def commandLine(Argv):
+    """
+    Method converting a list of arguments/parameter in a command line format (to include in the execution of a program for exemple).
+    list --> str
+    """
+    
+    assert type(Argv) is list, "The argument of this method are the arguments to convert in the command line format. (type List)"
+    
+    commandLine = ''
+    for i in Argv[1::]:
+        commandLine += i+" "
+    return(commandLine)
+
 def parse_list(string):
     """
     Parser allowing to extract the first appearing list in a String.
@@ -634,15 +672,24 @@ def parse_list(string):
         raise ParsingException("Never ending list to parse.")
     return out
             
-#We try to simulate a switch case function using dictionaries.
+def fileName():
+    if "-f" in argv:
+        return argv[argv.index("-f")+1]
+    else:
+        raise CommandLineException("Please specify the input file, using the -f parameter, in the command line.")
 
-switcher_options = {
-        "--help" : print_help,
-        "--problems" : print_problems,
-        "--formats" : print_formats,
-        "--reductions" : print_reductions,
-        "--informations" : print_informations
-        }
+def fileformat():
+    if "-fo" in argv:
+        Format = argv[argv.index("-fo")+1]
+        if Format not in ["papx","ptgf"]:
+            raise UnsupportedFormatException("Unsupported format {}. Supported formats are papx and ptgf.\nUse --formats for more information.".format(Format))
+        else:
+            return Format
+    else:
+        print("Please specify the file's format, using the -fo parameter, in the command line.")
+        print("Here are the available formats :")
+        print_formats()
+        raise CommandLineException("Please specify the file's format, using the -fo parameter, in the command line.")
 
 switcher_reductions = {
         "1" : reduction1,
@@ -651,28 +698,7 @@ switcher_reductions = {
         "4" : reduction4
         }
 
-if len(argv) == 1:
-    print_informations()
-
-elif len(argv) == 2:
-    switcher_options.get(argv[1])()
-
-else:
-    solverArgv = argv.copy()
-    if "-f" in argv:
-        file = argv[argv.index("-f")+1]
-    else:
-        raise CommandLineException("Please specify the input file, using the -f parameter, in the command line.")
-    if "-fo" in argv:
-        fileformat = argv[argv.index("-fo")+1]
-        if fileformat not in ["papx","ptgf"]:
-            raise UnsupportedFormatException("Unsupported format {}. Supported formats are papx and ptgf.\nUse --formats for more information.".format(fileformat))
-        solverArgv[argv.index("-fo")+1] = "tgf" if fileformat == "ptgf" else "apx"
-    else:
-        print("Please specify the file's format, using the -fo parameter, in the command line.")
-        print("Here are the available formats :")
-        print_formats()
-        raise CommandLineException("Please specify the file's format, using the -fo parameter, in the command line.")
+def applyReduction(file, fileformat, solverArgv):
     if "-r" in argv:
         reduction = argv[argv.index("-r")+1]
         toPaf(file, fileformat)
@@ -687,35 +713,45 @@ else:
                 i+=1
             solverArgv.remove(argv[i])
         if "-p" in argv:
-            task = argv[argv.index("-p")+1]
             outs.append("Reduction{}-AF-tmp.{}".format(reduction, 'tgf'if fileformat == "ptgf" else "apx"))
         switcher_reductions.get(argv[argv.index("-r")+1])(outs, 'tgf'if fileformat == "ptgf" else "apx")
+    else:
+        reduction = '0'
+    return reduction
+
+def Solver(solverArgv):
+    if "-s" in argv:
+        solver = argv[argv.index("-s")+1]
+        solverArgv.remove("-s")
+        solverArgv.remove(solver)
+    else:
+        if platform.system() in ["Linux", "Darwin"]:
+            solver = "mu-toksia.exe"
+        elif platform.system() == "Windows":
+            solver = "jArgSemSAT.java"
+        else :
+            print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
+            raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.")
+    return solver
+
+def solverPath_scan(solverArgv):
+    if "-sp" in argv:
+        path = argv[argv.index("-sp")+1]
+        solverArgv.remove("-sp")
+        solverArgv.remove(path)
+        scan = False
+    else:
+        path = "."
+        scan = True
+    return(path,scan)
+
+def doTask(file = 'Reduction0-AF-tmp.tgf', fileformat = 'tgf', reduction = '0', solverArgv = argv, programPath = "."):
     if "-p" in argv:
-        if "-s" in argv:
-            solver = argv[argv.index("-s")+1]
-            solverArgv.remove("-s")
-            solverArgv.remove(solver)
-        else:
-            if platform.system() in ["Linux", "Darwin"]:
-                solver = "mu-toksia.exe"
-            elif platform.system() == "Windows":
-                solver = "jArgSemSAT.java"
-            else :
-                print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
-                raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.")
-        if "-sp" in argv:
-            path = argv[argv.index("-sp")+1]
-            solverArgv.remove("-sp")
-            solverArgv.remove(path)
-            scan = False
-        else:
-            path = "."
-            scan = True
+        solver = Solver(solverArgv)
+        path,scan = solverPath_scan(solverArgv)
         try:
             solverArgv[solverArgv.index("-f")+1] = "Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx")
             sysOutput = solverOutput(solver, path, scan, solverArgv)
-            for i in sysOutput:
-                print(i)
         except(FindingSolverException):
             print("Your solver was to hard to find, please provide it's name with the -s parameter and it's path thanks to the-sp parameter.\n Also please be sure that the solver is at the right place.")
             raise FindingSolverException("Your solver was to hard to find.")
@@ -723,6 +759,27 @@ else:
             print("Your solver is to hard to find, the recursion error was reached.")
             raise RecursionError("Your solver was to hard to find.")
         finally:
+            os.chdir(programPath)
             os.remove("Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx"))
+            return(sysOutput)
             
-        #TODO try working on subdividing existing methods in smaller and easier ones to improve the code readability, transportability and ability to be modified
+
+def main(argc, argv):
+    if argc == 1:
+        print_informations()
+    
+    elif argc == 2:
+        switcher_options.get(argv[1])()
+    
+    else:
+        solverArgv = argv.copy()
+        programPath = pl.Path(os.getcwd())
+        file = fileName()
+        FileFormat = fileformat()
+        solverArgv[argv.index("-fo")+1] = "tgf" if FileFormat == "ptgf" else "apx"
+        reduction = applyReduction(file, FileFormat, solverArgv)
+        sysOutput = doTask(file, FileFormat, reduction, solverArgv, programPath)
+        for i in sysOutput:
+            print(i)
+            
+main(len(argv), argv)
