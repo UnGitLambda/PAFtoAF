@@ -143,6 +143,10 @@ def toPaf(inputFile, fileformat):
     assert type(inputFile) is str, "The first argument of this method must be the name of the inputFile. (type String)"
     assert type(fileformat) is str, "The second argument of this method must be the extension of the inputFile. (type String)"
     
+    args.clear()
+    attacksFrom.clear()
+    preferences.clear()
+    
     try:
         file = open(inputFile, "r")
     except FileNotFoundError:
