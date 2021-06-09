@@ -76,7 +76,7 @@ buttonframe.pack(side = tk.BOTTOM)
 def show_help():
     help_window = tk.Tk()
     help_window.title("HELP")
-    help_window.geometry("686x460")
+    help_window.geometry("686x480")
     help_window.config(bg = "#dddddd")
     help_frame = tk.Frame(help_window, height = 30, width = 86)
     help_frame.pack()
@@ -93,15 +93,47 @@ def show_help():
     help_text.insert("end", "\nThe result should appear in the figure down below, if you want to dowload it\nplease indicate the path to the directory and then press the dowload button.\n")
 
 def show_formats():
+    def show_ptgf():
+        formats_text.delete("1.0", "end")
+        formats_text.insert("end", "\nThe tgf (Trivial Graph Format) is a usualformat for files\ndescipting an AF.\n")
+        formats_text.insert("end", "Here we add the preference side of a Preference-base AF (PAF).\n")
+        formats_text.insert("end", "\nTo do so, we add on the tgf format a second # delimiting\na third area, where the prefernces are written as attacks.\n")
+        formats_text.insert("end", "So arguments are written as their names, then a # is placed,\nfollowed by the attacks where 1 2 means that 1 attacks 2.\n")
+        formats_text.insert("end", "Then a second # is placed and finally the preferences\nwhere 1 2 means 1 is prefered over 2.\n")
+        formats_text.insert("end", "Here is an exemple :\n1\n2\n3\n#\n1 2\n2 1\n2 3\n#\n1 2\n\nMeans that 1 and 2 attack each other, 2 attack 3, 1 is preffered\nover 2.")
+        p_tgfButton["bg"] = "red"
+        p_tgfButton["state"] = tk.DISABLED
+        p_apxButton["bg"] = "white"
+        p_apxButton["state"] = tk.NORMAL
+    def show_papx():
+        formats_text.delete("1.0", "end")
+        formats_text.insert("end", "\nThe apx (Aspartix) is a usualformat for files\ndescipting an AF.\n")
+        formats_text.insert("end", "Here we add the preference side of a Preference-base AF (PAF).\n")
+        formats_text.insert("end", "\nTo do so, we add on the apx format a new keyword\nfor the prefernces : pref.\n")
+        formats_text.insert("end", "So arguments are written as arg(name) followed by\nthe attacks where att(1,2) means that 1 attacks 2.\n")
+        formats_text.insert("end", "Finally the preferences written pref(1,2) if 1 is prefered\nover 2.\n")
+        formats_text.insert("end", "Here is an exemple :\narg(1)\narg(2)\narg(3)\natt(1,2)\natt(2,1)\natt(2,3)\npref(1,2)\n\nMeans that 1 and 2 attack each other, 2 attack 3, 1 is preffered\nover 2.")
+        p_apxButton["bg"] = "red"
+        p_apxButton["state"] = tk.DISABLED
+        p_tgfButton["bg"] = "white"
+        p_tgfButton["state"] = tk.NORMAL
     formats_window = tk.Tk()
     formats_window.title("HELP")
-    formats_window.geometry("666x400")
+    formats_window.geometry("686x480")
     formats_window.config(bg = "#dddddd")
-    formats_frame = tk.Frame(formats_window)
+    formats_frame = tk.Frame(formats_window, height = 30, width = 86)
     formats_frame.pack()
-    formats_text = tk.Text(formats_frame)
+    accepted_formats_text = tk.Text(formats_frame, height = 4, width = 84)
+    accepted_formats_text.pack(side = tk.TOP)
+    formats_text = tk.Text(formats_frame, height = 28, width = 84)
+    buttonsframe = tk.Frame(formats_frame, height = 5, width = 84)
+    buttonsframe.pack(side = tk.TOP)
+    p_tgfButton = tk.Button(buttonsframe, text = "tgf and ptgf", bg = "white", activebackground = "red", command = show_ptgf)
+    p_apxButton = tk.Button(buttonsframe, text = "apx and papx", bg = "white", activebackground = "red", command = show_papx)
+    p_tgfButton.pack(side = tk.LEFT)
+    p_apxButton.pack(side = tk.LEFT)
     formats_text.pack(side = tk.TOP)
-    formats_text.insert("end", "hello") #TODO insert instructions aimed towards helping the user understand the ptgf, papx, tgf and apx formats
+    accepted_formats_text.insert("end", "The formats accepted are ptgf, papx, tgf, and apx.\n")
     
 def ClickReduc1():
     paf.reduction1(["Reduction1-AF-tmp.tgf"], "tgf")
