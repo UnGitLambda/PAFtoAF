@@ -14,11 +14,8 @@ import TkinterDnD2 as tkd
 import PAFtoAF as paf
 import Graphviz as G
 
-file = ''
+inputfile = ''
 fileformat = ''
-reduction = 0
-outs = []
-task = ''
 
 def load_text(event):
     textarea.delete("1.0","end")
@@ -28,20 +25,27 @@ def load_text(event):
     button3["bg"] = "white"
     button4["bg"] = "white"
     if event.data.endswith(".ptgf") or event.data.endswith(".papx"):
+        global inputfile
+        global fileformat
+        inputfile = event.data
+        fileformat = "ptgf" if event.data.endswith(".ptgf") else "papx"
         with open(event.data, "r") as file:
             for line in file:
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
-        paf.toPaf(event.data, "ptgf")
+        paf.toPaf(event.data, "ptgf" if event.data.endswith(".ptgf") else "papx")
         button1["state"] = tk.NORMAL
         button2["state"] = tk.NORMAL
         button3["state"] = tk.NORMAL
         button4["state"] = tk.NORMAL
     elif event.data.endswith(".tgf") or event.data.endswith(".apx"):
+        inputfile = event.data
+        fileformat = "tgf" if event.data.endswith(".tgf") else "apx"
         with open(event.data, "r") as file:
             for line in file:
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
+        paf.toPaf(event.data,"ptgf" if event.data.endswith(".ptgf") else "papx")
         button1["state"] = tk.NORMAL
         button2["state"] = tk.NORMAL
         button3["state"] = tk.NORMAL
@@ -136,13 +140,13 @@ def show_formats():
     accepted_formats_text.insert("end", "The formats accepted are ptgf, papx, tgf, and apx.\n")
     
 def ClickReduc1():
-    paf.reduction1(["Reduction1-AF-tmp.tgf"], "tgf")
-    with open("Reduction1-AF-tmp.tgf","r") as file:
+    paf.reduction1(["Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    with open("Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
         for line in file:
             line = line.strip()
             textareaReduc.insert("end", f"{line}\n")
-    os.remove("Reduction1-AF-tmp.tgf")
+    os.remove("Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"))
     button1["bg"] = "red"
     button1["state"] = tk.DISABLED
     button2["bg"] = "white"
@@ -153,13 +157,13 @@ def ClickReduc1():
     button4["state"] = tk.NORMAL
 
 def ClickReduc2():
-    paf.reduction2(["Reduction2-AF-tmp.tgf"], "tgf")
-    with open("Reduction2-AF-tmp.tgf","r") as file:
+    paf.reduction2(["Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    with open("Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
         for line in file:
             line = line.strip()
             textareaReduc.insert("end", f"{line}\n")
-    os.remove("Reduction2-AF-tmp.tgf")
+    os.remove("Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"))
     button2["bg"] = "red"
     button2["state"] = tk.DISABLED
     button1["bg"] = "white"
@@ -170,13 +174,13 @@ def ClickReduc2():
     button4["state"] = tk.NORMAL
 
 def ClickReduc3():
-    paf.reduction3(["Reduction3-AF-tmp.tgf"], "tgf")
-    with open("Reduction3-AF-tmp.tgf","r") as file:
+    paf.reduction3(["Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    with open("Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
         for line in file:
             line = line.strip()
             textareaReduc.insert("end", f"{line}\n")
-    os.remove("Reduction3-AF-tmp.tgf")
+    os.remove("Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"))
     button3["bg"] = "red"
     button3["state"] = tk.DISABLED
     button1["bg"] = "white"
@@ -187,13 +191,13 @@ def ClickReduc3():
     button4["state"] = tk.NORMAL
 
 def ClickReduc4():
-    paf.reduction4(["Reduction4-AF-tmp.tgf"], "tgf")
-    with open("Reduction4-AF-tmp.tgf","r") as file:
+    paf.reduction4(["Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    with open("Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
         for line in file:
             line = line.strip()
             textareaReduc.insert("end", f"{line}\n")
-    os.remove("Reduction4-AF-tmp.tgf")
+    os.remove("Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"))
     button4["bg"] = "red"
     button4["state"] = tk.DISABLED
     button1["bg"] = "white"
@@ -210,7 +214,7 @@ def show_graph(): #TODO
         pass
     
 def show_graph_reduc(): #TODO
-    if graphh_value == 0:
+    if graph_reduc_value == 0:
         pass
     else:
         pass
@@ -255,9 +259,9 @@ textareaReduc.grid(row = 0, column = 0, rowspan = 6, columnspan = 6)
 sbvR = tk.Scrollbar(frameReduction, orient=tk.VERTICAL)
 sbvR.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
 
-graphh_value = tk.IntVar()
-graphh = tk.Checkbutton(frameReduction, disabledforeground = "yellow", text = "generate the graph", variable = graphh_value, command = show_graph_reduc)
-graphh.grid(row = 7, column = 0)
+graph_reduc_value = tk.IntVar()
+graph_reduc = tk.Checkbutton(frameReduction, disabledforeground = "yellow", text = "generate the graph", variable = graph_reduc_value, command = show_graph_reduc)
+graph_reduc.grid(row = 7, column = 0)
 
 textareaReduc.configure(yscrollcommand = sbvR.set)
 sbvR.config(command = textareaReduc.yview)
