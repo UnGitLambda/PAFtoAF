@@ -6,10 +6,15 @@ Created on Tue Jun 8 2021
 """
 
 import os
-import matplotlib as plt
-plt.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import tkinter as tk
+from PIL import (Image,ImageTk)
+import networkx as nx
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
 import Graphviz as G
@@ -207,9 +212,45 @@ def ClickReduc4():
     button3["bg"] = "white"
     button3["state"] = tk.NORMAL
 
-def show_graph(): #TODO
+def show_graph(): #TODO show preferences on the graph and make it WORK
     if graph_check_value == 0:
-        pass
+        edgeList = []
+
+        root = tk.Tk()
+        root.wm_title("graph file")
+        
+        fig = plt.figure(figsize=(12,12))
+        ax = plt.subplot(111)
+        ax.set_title('Graph - Shapes', fontsize=10)
+        graph = nx.DiGraph()
+        
+        for arg1 in paf.attacksFrom.keys():
+            for arg2 in paf.attacksFrom[arg1]:
+                edgeList.append((arg1,arg2))
+        
+        graph.add_edges_from(edgeList)
+        
+        pos = nx.spring_layout(graph)
+        nx.draw(graph, pos, node_size=1500, node_color='yellow', font_size=8, font_weight='bold')
+        
+        plt.tight_layout()
+        plt.savefig("Graph.png", format="PNG")
+        
+        canvas = tk.Canvas(root, width = 850, height = 850)
+        canvas.pack()
+        
+        img = Image.open("Graph.png")
+        photoImg = ImageTk.PhotoImage(img)
+        canvas.create_image(20,20, anchor=tk.NW, image=photoImg)
+
+        fig.close()
+        def on_closing():
+            img.close()
+            photoImg.close()
+            root.destroy()
+    
+        root.protocol("WM_DELETE_WINDOW", on_closing)
+        root.mainloop()
     else:
         pass
     
