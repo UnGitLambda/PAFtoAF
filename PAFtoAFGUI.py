@@ -17,10 +17,16 @@ from PIL import (Image,ImageTk)
 import networkx as nx
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
-import Graphviz as G
 
 inputfile = ''
 fileformat = ''
+task= ''
+query = ''
+outs = ["standard output"]
+solver = ''
+solverPath = ''
+reduction = 0
+fig = Figure()
 
 def load_text(event):
     textarea.delete("1.0","end")
@@ -29,9 +35,9 @@ def load_text(event):
     button2["bg"] = "white"
     button3["bg"] = "white"
     button4["bg"] = "white"
+    global inputfile
+    global fileformat
     if event.data.endswith(".ptgf") or event.data.endswith(".papx"):
-        global inputfile
-        global fileformat
         inputfile = event.data
         fileformat = "ptgf" if event.data.endswith(".ptgf") else "papx"
         with open(event.data, "r") as file:
@@ -60,8 +66,15 @@ def load_text(event):
         button2["state"] = tk.DISABLED
         button3["state"] = tk.DISABLED
         button4["state"] = tk.DISABLED
+        paf.args.clear()
+        paf.attacksFrom.clear()
+        paf.preferences.clear()
         textarea.insert("end","Sorry this document format is not\naccepted.\nPlease use .ptgf .papx .tgf or .apx\nformats.\n\nFor help please click on the help button and to see the available formats click onthe formats button.")
+    global graph_check_value
+    if graph_check_value.get() == 1:
+        show_graph()
         
+
 ws = tkd.TkinterDnD.Tk()
 ws.title('PAFtoAF')
 ws.geometry('750x400')
@@ -95,7 +108,7 @@ def show_help():
     help_text.insert("end", "\nThis application allows you to use a Preference-based Argumentation Framework\n(PAF) and transform it into an Extension-based Argumentation Framework (AF).\n")
     help_text.insert("end", "\nTo do so, please choose a file in the ptgf, papx, tgf or apx format\n(for more information please click on the formats button in the main window).\n")
     help_text.insert("end", "\nDrag you file in the area specifying so. The text in the file should now appear.\n")
-    help_text.insert("end", "\nYou can generate the graph described in the file by checking\nthe box under the text area.\n")
+    help_text.insert("end", "\nYou can generate the graph described in the file by checking\nthe box under the text area.\nA png file with the graph, named graph-filename.png will be saved in the folder\ncontaining this app.\n")
     help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a ptg or apx format. The same chekbox is under this text area.")
     help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the line all\nthe way down, in abscence of a name, mu-toksia will be selected under Linux\nand JArgSemSAT under Windows.\n")
     help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
@@ -145,6 +158,8 @@ def show_formats():
     accepted_formats_text.insert("end", "The formats accepted are ptgf, papx, tgf, and apx.\n")
     
 def ClickReduc1():
+    global reduction
+    reduction = 1
     paf.reduction1(["Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open("Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
@@ -162,6 +177,8 @@ def ClickReduc1():
     button4["state"] = tk.NORMAL
 
 def ClickReduc2():
+    global reduction
+    reduction = 2
     paf.reduction2(["Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open("Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
@@ -179,6 +196,8 @@ def ClickReduc2():
     button4["state"] = tk.NORMAL
 
 def ClickReduc3():
+    global reduction
+    reduction = 3
     paf.reduction3(["Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open("Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
@@ -196,6 +215,8 @@ def ClickReduc3():
     button4["state"] = tk.NORMAL
 
 def ClickReduc4():
+    global reduction
+    reduction = 4
     paf.reduction4(["Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open("Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx"),"r") as file:
         textareaReduc.delete("1.0", "end")
@@ -212,53 +233,65 @@ def ClickReduc4():
     button3["bg"] = "white"
     button3["state"] = tk.NORMAL
 
-def show_graph(): #TODO show preferences on the graph and make it WORK
-    if graph_check_value == 0:
-        edgeList = []
-
-        root = tk.Tk()
-        root.wm_title("graph file")
+def show_graph(): #TODO show preferences on the graph and make it WORK and change the help def
+    global fig
+    global inputfile
+    
+    if graph_check_value.get() == 1:
+        if fig == Figure():
+            fig = plt.figure(figsize=(12,12))
         
-        fig = plt.figure(figsize=(12,12))
+        plt.clf()
+        
+        edgeList = []
+        
         ax = plt.subplot(111)
-        ax.set_title('Graph - Shapes', fontsize=10)
+        ax.set_title('Graph - {}'.format(inputfile), fontsize=10)
         graph = nx.DiGraph()
         
         for arg1 in paf.attacksFrom.keys():
             for arg2 in paf.attacksFrom[arg1]:
                 edgeList.append((arg1,arg2))
         
-        graph.add_edges_from(edgeList)
+        graph.add_edges_from(edgeList, color = "k", weight = 2)
         
+        critical_edges = []
+        
+        for arg1 in paf.preferences.keys():
+            for arg2 in paf.preferences[arg1]:
+                if (arg2, arg1) in edgeList:
+                    critical_edges.append((arg2,arg1))
+                    
+        graph.add_edges_from(critical_edges, color = "r", weight = 3)
+        
+        colors = nx.get_edge_attributes(graph,'color').values()
+        weights = nx.get_edge_attributes(graph,'weight').values()
         pos = nx.spring_layout(graph)
-        nx.draw(graph, pos, node_size=1500, node_color='yellow', font_size=8, font_weight='bold')
+        nx.draw(graph, pos, node_size=900, node_color='yellow', font_size=8, font_weight='bold', edge_color = colors, width = list(weights), arrowsize = 30, arrowstyle = "->", with_labels = True)
         
         plt.tight_layout()
-        plt.savefig("Graph.png", format="PNG")
-        
-        canvas = tk.Canvas(root, width = 850, height = 850)
-        canvas.pack()
-        
-        img = Image.open("Graph.png")
-        photoImg = ImageTk.PhotoImage(img)
-        canvas.create_image(20,20, anchor=tk.NW, image=photoImg)
+        if fileformat in ["ptgf", "papx", "apx", "tgf"]:
+            plt.savefig("Graph.png", format="PNG")
 
-        fig.close()
-        def on_closing():
-            img.close()
-            photoImg.close()
-            root.destroy()
-    
-        root.protocol("WM_DELETE_WINDOW", on_closing)
-        root.mainloop()
     else:
-        pass
+        os.remove("Graph.png")
+        plt.close()
     
 def show_graph_reduc(): #TODO
-    if graph_reduc_value == 0:
+    if graph_reduc_value.get() == 0:
         pass
     else:
         pass
+
+def save():
+    with(open("PAFtoAFGUI-saved-{}-{}.txt".format(inputfile.replace(".{}".format(fileformat),""), reduction), "w+")) as file:
+        file.write("hola")
+
+def on_closing():
+    if graph_check_value.get() == 1:
+        os.remove("Graph.png")
+    ws.destroy()
+    ws.quit()
 
 textarea = tk.Text(frameDnD, height=18, width=41)
 textarea.grid(row = 0, column = 0, rowspan = 6, columnspan = 6)
@@ -273,7 +306,7 @@ textarea.configure(yscrollcommand=sbv.set)
 sbv.config(command=textarea.yview)
 
 graph_check_value = tk.IntVar()
-graph_check = tk.Checkbutton(frameDnD, disabledforeground = "yellow", text = "generate the graph", variable = graph_check_value, command = show_graph)
+graph_check = tk.Checkbutton(frameDnD, disabledforeground = "yellow", text = "generate the graph", variable = graph_check_value, command = show_graph, onvalue = 1)
 graph_check.grid(row = 7, column = 0)
 
 help_option = tk.Button(optionframe, activebackground = "red", bg = "white", text = "Help", command = show_help)
@@ -281,6 +314,9 @@ help_option.pack(side = tk.LEFT)
 
 formats_option = tk.Button(optionframe, activebackground = "red", bg = "white", text = "Formats", command = show_formats)
 formats_option.pack(side = tk.LEFT)
+
+save_option = tk.Button(optionframe, activebackground = "blue", bg = "white", text = "save", command = save)
+save_option.pack(side = tk.LEFT)
 
 button1 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "reduction 1", state = tk.DISABLED, command = ClickReduc1)
 button1.pack(side = tk.LEFT)
@@ -296,6 +332,7 @@ button4.pack(side = tk.LEFT)
 
 textareaReduc = tk.Text(frameReduction, height=18, width=41)
 textareaReduc.grid(row = 0, column = 0, rowspan = 6, columnspan = 6)
+textareaReduc.configure(state = "disabled")
 
 sbvR = tk.Scrollbar(frameReduction, orient=tk.VERTICAL)
 sbvR.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
@@ -307,6 +344,6 @@ graph_reduc.grid(row = 7, column = 0)
 textareaReduc.configure(yscrollcommand = sbvR.set)
 sbvR.config(command = textareaReduc.yview)
 
-
+ws.protocol("WM_DELETE_WINDOW", on_closing)
 
 ws.mainloop()
