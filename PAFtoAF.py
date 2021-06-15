@@ -460,17 +460,17 @@ def print_AF(newAttacksFrom, fileformat):
     
     if fileformat == "tgf":
         for i in args:
-            print("".join([i,"\n"]))
-        print("#\n")
+            print("".join([i,""]))
+        print("#")
         for j in newAttacksFrom.keys():
             for k in newAttacksFrom[j]:
-                print(''.join([j," ",k,"\n"]))
+                print(''.join([j," ",k]))
     elif fileformat == "apx":
         for i in args:
-            print("arg({})\n".format(i))
+            print("arg({})".format(i))
         for j in newAttacksFrom.keys():
             for k in newAttacksFrom[j]:
-                print("att({},{})\n".format(j,k))
+                print("att({},{})".format(j,k))
     else:
         print("Unsupported format ", fileformat,", suported formats are : ")
         print_formats()
