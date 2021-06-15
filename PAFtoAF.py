@@ -46,7 +46,7 @@ def print_help():
     """
     Invoked when the user asks for help with the [--help] prameter
     """
-    print("-p <task> -f <file> -fo <format> [-r <reduction>] [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
+    print("-f <file> -fo <format> [-p <task>] [-r <reduction>] [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
     print("<task> is the computational problem, use --problems to see the ones supported")
     print("<file> is the input, the preference-based argumentation framework")
     print("<format> file format for input PAF; for a list of available formats use option --formats")
@@ -70,6 +70,7 @@ def print_problems():
     Invoked when the user wishes to see the available prblems with the [--problems] parameter
     """
     for i in ["CO","PR","ST","SST","STG","GR","ID"]:
+        print()
         for j in ["DC","DS","SE","CE", "EE"]:
             problem = "{}-{}".format(j,i)
             if problem == "CE-ID" or problem == "DC-ID" or problem == "EE-ID": #CE-ID = 1 so EE-ID = SE-ID and DC-ID = DS-ID so we only consider SE-ID and DS-ID
@@ -123,11 +124,14 @@ def outputs():
     """
     outputs = ''
     if "-out" in argv:
-        i=1
-        while("]" not in outputs):
-            outputs += argv[argv.index("-out")+i]
-            i += 1
-    return(parse_list(outputs))
+        if "[" in argv[argv.index("-out")+1]:
+            i=1
+            while("]" not in outputs):
+                outputs += argv[argv.index("-out")+i]
+                i += 1
+            return(parse_list(outputs))
+        else:
+            return [argv[argv.index("-out")+1]]
             
 def toPaf(inputFile, fileformat):
     """
@@ -712,10 +716,14 @@ def applyReduction(file, fileformat, solverArgv):
         if "-out" in argv:
             outs = outputs()
             i = argv.index("-out")
-            while "]" not in argv[i]:
+            if "[" in argv[argv.index("-out")+1]:
+                while "]" not in argv[i]:
+                    solverArgv.remove(argv[i])
+                    i+=1
                 solverArgv.remove(argv[i])
-                i+=1
-            solverArgv.remove(argv[i])
+            else:
+                solverArgv.remove("-out")
+                solverArgv.remove(argv[argv.index("-out")+1])
         if "-p" in argv:
             outs.append("Reduction{}-AF-tmp.{}".format(reduction, 'tgf'if fileformat == "ptgf" else "apx"))
         switcher_reductions.get(argv[argv.index("-r")+1])(outs, 'tgf'if fileformat == "ptgf" else "apx")
@@ -783,7 +791,8 @@ def main(argc, argv):
         solverArgv[argv.index("-fo")+1] = "tgf" if FileFormat == "ptgf" else "apx"
         reduction = applyReduction(file, FileFormat, solverArgv)
         sysOutput = doTask(file, FileFormat, reduction, solverArgv, programPath)
-        for i in sysOutput:
-            print(i)
+        if sysOutput is not None:
+            for i in sysOutput:
+                print(i)
             
 main(len(argv), argv)
