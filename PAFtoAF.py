@@ -87,7 +87,7 @@ def print_formats():
     print("Preference-based ASPARTIX Format [.papx]")
     print("Arguments are written as arg(1), attacks as att(1,2) and preferences as pref(1,2).")
     print("Here is an exemple :\narg(1)\narg(2)\narg(3)\natt(1,2)\natt(2,3)\natt(2,1)\npref(1,2)")
-    
+
 def print_reductions():
     print("Reductions are a way to 'extract' an AF from a PAF.")
     print("When applying a reduction to a PAF we focus on a peculiar type of attack :")
@@ -132,7 +132,7 @@ def outputs():
             return(parse_list(outputs))
         else:
             return [argv[argv.index("-out")+1]]
-            
+
 def toPaf(inputFile, fileformat):
     """
     This function converts the file (input) into a Preference-based Argumentation Framework.
@@ -242,7 +242,7 @@ def parse_argument_ptgf(c):
     args.add(arg)
     attacksFrom[arg] = set()
     preferences[arg] = set()
-    
+
 def parse_argument_papx(c):
     """
     Parser allowing to extract an argument from a string in the papx (or apx) format.
@@ -256,7 +256,7 @@ def parse_argument_papx(c):
     args.add(arg)
     attacksFrom[arg] = set()
     preferences[arg] = set()
-    
+
 def parse_attack_ptgf(c):
     """
     Parser allowing to extract an attack from a string in the ptgf (or tgf) format.
@@ -348,7 +348,7 @@ def parse_preference_papx(c):
     else:
         print("Argument ", arg1 if arg2 in args else arg2, " is referenced in preferences but not defined.")
         raise FormatSyntaxException("Argument referenced before initialization.")
-                    
+
 def toFile(newAttacksFrom, outputFile = "AF", fileformat = "tgf"):
     """
     Function writting the AF (after the reductions) in a file.
@@ -520,7 +520,7 @@ def reduction2(outs = ["Reduction2-AF.tgf"], fileformat = "tgf"):
             print_AF(copyAttacksFrom, fileformat)
             continue
         toFile(copyAttacksFrom, output, fileformat)
-    
+
 def reduction3(outs = ["Reduction3-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the third reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
@@ -542,7 +542,7 @@ def reduction3(outs = ["Reduction3-AF.tgf"], fileformat = "tgf"):
             print_AF(copyAttacksFrom, fileformat)
             continue
         toFile(copyAttacksFrom, output, fileformat)
-    
+
 def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
     """
     Function applying the fourth reduction rule to the PAD and then creating a file containing the resulting AF in the selected format.
@@ -564,7 +564,7 @@ def reduction4(outs = ["Reduction4-AF.tgf"], fileformat = "tgf"):
             print_AF(copyAttacksFrom, fileformat)
             continue
         toFile(copyAttacksFrom, output, fileformat)
-    
+
 def solverOutput(solver, path = ".", scan = False, solverArgv = argv):
     """
     Invoked when the -p parameter is used.
@@ -586,7 +586,7 @@ def solverOutput(solver, path = ".", scan = False, solverArgv = argv):
     if output=='' :
         raise FindingSolverException("Unable to find the solver.")
     return(output)
-    
+
 def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
     """
     Method used to create the command line to execute the solver.
@@ -617,7 +617,6 @@ def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
         else:
             execCommand = Path.__str__() + ' ' + paramSolver
     return(execCommand)
-
 
 def solverName(file, solver):
     """
@@ -679,7 +678,7 @@ def parse_list(string):
     if start:
         raise ParsingException("Never ending list to parse.")
     return out
-            
+
 def fileName():
     if "-f" in argv:
         return argv[argv.index("-f")+1]
@@ -738,9 +737,9 @@ def Solver(solverArgv):
         solverArgv.remove(solver)
     else:
         if platform.system() in ["Linux", "Darwin"]:
-            solver = "mu-toksia.exe"
+            solver = "mu-toksia"
         elif platform.system() == "Windows":
-            solver = "jArgSemSAT.java"
+            solver = "jArgSemSAT.jar"
         else :
             print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
             raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.")
@@ -774,15 +773,14 @@ def doTask(file = 'Reduction0-AF-tmp.tgf', fileformat = 'tgf', reduction = '0', 
             os.chdir(programPath)
             os.remove("Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx"))
             return(sysOutput)
-            
 
 def main(argc, argv):
     if argc == 1:
         print_informations()
-    
+
     elif argc == 2:
         switcher_options.get(argv[1])()
-    
+
     else:
         solverArgv = argv.copy()
         programPath = pl.Path(os.getcwd())
@@ -794,5 +792,5 @@ def main(argc, argv):
         if sysOutput is not None:
             for i in sysOutput:
                 print(i)
-            
+
 main(len(argv), argv)

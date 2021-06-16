@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("TkAgg")
 import tkinter as tk
+from tkinter import ttk
 import networkx as nx
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
@@ -27,9 +28,12 @@ reduction = 0
 fig = Figure()
 figReduc = Figure()
 
+os.mkdir("temp")
+
 def load_text(event):
     textarea.delete("1.0","end")
     textareaReduc.delete("1.0","end")
+    button0["bg"] = "white"
     button1["bg"] = "white"
     button2["bg"] = "white"
     button3["bg"] = "white"
@@ -44,6 +48,8 @@ def load_text(event):
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
         paf.toPaf(event.data, "ptgf" if event.data.endswith(".ptgf") else "papx")
+        button0["bg"] = "red"
+        button0["state"] = tk.DISABLED
         button1["state"] = tk.NORMAL
         button2["state"] = tk.NORMAL
         button3["state"] = tk.NORMAL
@@ -56,13 +62,16 @@ def load_text(event):
             for line in file:
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
-        paf.toPaf(event.data,"ptgf" if event.data.endswith(".ptgf") else "papx")
+        paf.toPaf(event.data,"ptgf" if event.data.endswith(".tgf") else "papx")
+        button0["bg"] = "red"
+        button0["state"] = tk.DISABLED
         button1["state"] = tk.NORMAL
         button2["state"] = tk.NORMAL
         button3["state"] = tk.NORMAL
         button4["state"] = tk.NORMAL
         graph_check["state"] = tk.NORMAL
     else:
+        button0["state"] = tk.DISABLED
         button1["state"] = tk.DISABLED
         button2["state"] = tk.DISABLED
         button3["state"] = tk.DISABLED
@@ -77,11 +86,116 @@ def load_text(event):
     if graph_check_value.get() == 1:
         show_graph()
         
+def load_text_selection():
+    typeslist = [("PTFG file", ".ptgf"), ("PAPX file", ".papx"), ("TGF file", ".tgf"), ("APX file", ".apx")]
+    Sfile = tk.filedialog.askopenfilename(title = "Sélectionnez un fichier ..." , filetypes = typeslist)
+    load_text_file(Sfile)
+    
+    
+def load_text_file(Sfile):
+    textarea.delete("1.0","end")
+    textareaReduc["state"] = tk.NORMAL
+    textareaReduc.delete("1.0","end")
+    textareaReduc["state"] = tk.DISABLED
+    button0["bg"] = "white"
+    button1["bg"] = "white"
+    button2["bg"] = "white"
+    button3["bg"] = "white"
+    button4["bg"] = "white"
+    global inputfile
+    global fileformat
+    global reduction
+    reduction = 0
+    if Sfile.endswith(".ptgf") or Sfile.endswith(".papx"):
+        inputfile = Sfile
+        fileformat = "ptgf" if Sfile.endswith(".ptgf") else "papx"
+        with open(Sfile, "r") as file:
+            for line in file:
+                line=line.strip()
+                textarea.insert("end",f"{line}\n")
+        paf.toPaf(Sfile, "ptgf" if Sfile.endswith(".ptgf") else "papx")
+        button0["bg"] = "red"
+        button0["state"] = tk.DISABLED
+        button1["state"] = tk.NORMAL
+        button2["state"] = tk.NORMAL
+        button3["state"] = tk.NORMAL
+        button4["state"] = tk.NORMAL
+        graph_check["state"] = tk.NORMAL
+    elif Sfile.endswith(".tgf") or Sfile.endswith(".apx"):
+        inputfile = Sfile
+        fileformat = "tgf" if Sfile.endswith(".tgf") else "apx"
+        with open(Sfile, "r") as file:
+            for line in file:
+                line=line.strip()
+                textarea.insert("end",f"{line}\n")
+        paf.toPaf(Sfile,"ptgf" if Sfile.endswith(".tgf") else "papx")
+        button0["bg"] = "red"
+        button0["state"] = tk.DISABLED
+        button1["state"] = tk.NORMAL
+        button2["state"] = tk.NORMAL
+        button3["state"] = tk.NORMAL
+        button4["state"] = tk.NORMAL
+        graph_check["state"] = tk.NORMAL
+    else:
+        button0["state"] = tk.DISABLED
+        button1["state"] = tk.DISABLED
+        button2["state"] = tk.DISABLED
+        button3["state"] = tk.DISABLED
+        button4["state"] = tk.DISABLED
+        graph_check["state"] = tk.DISABLED
+        #graph_reduc["state"] = tk.DISABLED
+        paf.args.clear()
+        paf.attacksFrom.clear()
+        paf.preferences.clear()
+        textarea.insert("end","Sorry this document format is not\naccepted.\nPlease use .ptgf .papx .tgf or .apx\nformats.\n\nFor help please click on the help button and to see the available formats click onthe formats button.")
+    global graph_check_value
+    if graph_check_value.get() == 1:
+        show_graph()
 
-ws = tkd.TkinterDnD.Tk()
-ws.title('PAFtoAF')
-ws.geometry('750x400')
-ws.config(bg='#555555')
+def reload_text():
+    global inuptfile
+    global fileformat
+    if fileformat == '':
+        textarea.get("1.0", "2.0")
+        if line_is_int(textarea.get("1.0", "1.1")):
+            fileformat = "ptgf"
+        elif(textarea.get("1.0", "2.0")[0:3] == "arg"):
+            fileformat = "papx"
+        else:
+            textareaReduc["state"] = tk.NORMAL
+            textareaReduc.delete("1.0","end")
+            textareaReduc.insert("end", "\nThe text written in the box next to this one does not follow an accepted format.\n Please consult the format option button for more information.\n")
+            textareaReduc["state"] = tk.DISABLED
+            return 0
+    inputfile = "temp/reloading_text.{}".format(fileformat)
+    with(open(inputfile, "w+") as openfile):
+        print(textarea.get("1.0","end"))
+        openfile.write(textarea.get("1.0", "end"))
+        
+    load_text_file(inputfile)
+        
+def line_is_int(line):
+    if type(line) is int:
+        return(True)
+    elif type(line) is str:
+        try:
+            int(line)
+        except:
+            return(False)
+        return(True)
+    elif type(line) is float:
+        if line%1==0:
+            return(True)
+    return(False)
+    
+
+window = tkd.TkinterDnD.Tk()
+window.title('PAFtoAF')
+window.geometry('750x600')
+window.config(bg='#554356')
+
+ws = tk.Frame(window)
+ws.pack(side = tk.TOP)
 
 frame = tk.Frame(ws, height = 60, width = 82)
 frame.pack()
@@ -95,27 +209,31 @@ frameDnD.pack(side = tk.LEFT)
 frameReduction = tk.Frame(frame, height = 23, width = 41)
 frameReduction.pack(side = tk.RIGHT)
 
-buttonframe = tk.Frame(height = 5, width = 40)
+taskframe = tk.Frame(ws)
+taskframe.pack(side = tk.BOTTOM)
+
+buttonframe = tk.Frame(ws, height = 5, width = 40)
 buttonframe.pack(side = tk.BOTTOM)
 
 def show_help():
     help_window = tk.Tk()
     help_window.title("HELP")
-    help_window.geometry("686x480")
+    help_window.geometry("686x520")
     help_window.config(bg = "#dddddd")
-    help_frame = tk.Frame(help_window, height = 30, width = 86)
+    help_frame = tk.Frame(help_window, height = 34, width = 86)
     help_frame.pack()
-    help_text = tk.Text(help_frame, height = 28, width = 84)
+    help_text = tk.Text(help_frame, height = 32, width = 84)
     help_text.pack(side = tk.TOP)
     help_text.insert("end", "This is the GUI version of PAFtoAF Version 1.0, created by Eyal Cohen.\n")
     help_text.insert("end", "\nThis application allows you to use a Preference-based Argumentation Framework\n(PAF) and transform it into an Extension-based Argumentation Framework (AF).\n")
     help_text.insert("end", "\nTo do so, please choose a file in the ptgf, papx, tgf or apx format\n(for more information please click on the formats button in the main window).\n")
-    help_text.insert("end", "\nDrag you file in the area specifying so. The text in the file should now appear.\n")
-    help_text.insert("end", "\nYou can generate the graph described in the file by checking\nthe box under the text area.\nA png file with the graph, named graph-filename.png will be saved in the folder\ncontaining this app.\n")
+    help_text.insert("end", "\nDrag you file in the area specifying so or use the 'open' button to select one.\n(Don't forget to specify the format in the list or extensions)\nThe text in the file should now appear.\n")
+    help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\n")
     help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a ptg or apx format. The same chekbox is under this text area.")
     help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the line all\nthe way down, in abscence of a name, mu-toksia will be selected under Linux\nand JArgSemSAT under Windows.\n")
     help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
     help_text.insert("end", "\nThe result should appear in the figure down below, if you want to dowload it\nplease indicate the path to the directory and then press the dowload button.\n")
+    help_text.insert("end", "\n Please do not alter the 'temp' directory. You can copy a file if needed,\nbut removing/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
 
 def show_formats():
     def show_ptgf():
@@ -165,10 +283,15 @@ def ClickReduc0():
     global reduction
     global inputfile
     global fileformat
+    global graph_check_value
     reduction = 0
     paf.toPaf(inputfile,fileformat)
     textareaReduc.configure(state = "normal")
     textareaReduc.delete("1.0","end")
+    if graph_check_value.get() == 1:
+        show_graph()
+    button0["bg"] = "red"
+    button0["state"] = tk.DISABLED
     button1["bg"] = "white"
     button1["state"] = tk.NORMAL
     button2["bg"] = "white"
@@ -177,6 +300,8 @@ def ClickReduc0():
     button3["state"] = tk.NORMAL
     button4["bg"] = "white"
     button4["state"] = tk.NORMAL
+    problem_box["state"] = tk.DISABLED
+    semantic_box["state"] = tk.DISABLED
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc1():
@@ -189,7 +314,7 @@ def ClickReduc1():
     reduction = 1
     paf.toPaf(inputfile, fileformat)
     textareaReduc.configure(state = "normal")
-    file = "Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    file = "temp/Reduction1-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     paf.reduction1([file], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open(file,"r") as openfile:
         textareaReduc.delete("1.0", "end")
@@ -203,18 +328,21 @@ def ClickReduc1():
     #    tempFile.remove(file)
     #    tempFile.append(file)
     if graph_check_value.get() == 1:
-        print("new graph")
         show_graph()
     #if graph_reduc_value.get() == 1:
     #    show_graph_reduc()
     button1["bg"] = "red"
     button1["state"] = tk.DISABLED
+    button0["bg"] = "white"
+    button0["state"] = tk.NORMAL
     button2["bg"] = "white"
     button2["state"] = tk.NORMAL
     button3["bg"] = "white"
     button3["state"] = tk.NORMAL
     button4["bg"] = "white"
     button4["state"] = tk.NORMAL
+    problem_box["state"] = "readonly"
+    semantic_box["state"] = "readonly"
     #graph_reduc["state"] = tk.NORMAL
     textareaReduc.configure(state = "disabled")
 
@@ -228,7 +356,7 @@ def ClickReduc2():
     reduction = 2
     paf.toPaf(inputfile, fileformat)
     textareaReduc.configure(state = "normal")
-    file = "Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    file = "temp/Reduction2-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     paf.reduction2([file], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open(file,"r") as openfile:
         textareaReduc.delete("1.0", "end")
@@ -247,12 +375,16 @@ def ClickReduc2():
     #    show_graph_reduc()
     button2["bg"] = "red"
     button2["state"] = tk.DISABLED
+    button0["bg"] = "white"
+    button0["state"] = tk.NORMAL
     button1["bg"] = "white"
     button1["state"] = tk.NORMAL
     button3["bg"] = "white"
     button3["state"] = tk.NORMAL
     button4["bg"] = "white"
     button4["state"] = tk.NORMAL
+    problem_box["state"] = "readonly"
+    semantic_box["state"] = "readonly"
     #graph_reduc["state"] = tk.NORMAL
     textareaReduc.configure(state = "disabled")
 
@@ -266,7 +398,7 @@ def ClickReduc3():
     reduction = 3
     paf.toPaf(inputfile, fileformat)
     textareaReduc.configure(state = "normal")
-    file = "Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    file = "temp/Reduction3-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     paf.reduction3([file], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open(file,"r") as openfile:
         textareaReduc.delete("1.0", "end")
@@ -285,12 +417,16 @@ def ClickReduc3():
     #    show_graph_reduc()
     button3["bg"] = "red"
     button3["state"] = tk.DISABLED
+    button0["bg"] = "white"
+    button0["state"] = tk.NORMAL
     button1["bg"] = "white"
     button1["state"] = tk.NORMAL
     button2["bg"] = "white"
     button2["state"] = tk.NORMAL
     button4["bg"] = "white"
     button4["state"] = tk.NORMAL
+    problem_box["state"] = "readonly"
+    semantic_box["state"] = "readonly"
     #graph_reduc["state"] = tk.NORMAL
     textareaReduc.configure(state = "disabled")
 
@@ -303,7 +439,7 @@ def ClickReduc4():
     global fileformat
     reduction = 4
     paf.toPaf(inputfile, fileformat)
-    file = "Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+    file = "temp/Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     textareaReduc.configure(state = "normal")
     paf.reduction4([file]+outs, "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
     with open(file,"r") as openfile:
@@ -323,12 +459,16 @@ def ClickReduc4():
     #    show_graph_reduc()
     button4["bg"] = "red"
     button4["state"] = tk.DISABLED
+    button0["bg"] = "white"
+    button0["state"] = tk.NORMAL
     button1["bg"] = "white"
     button1["state"] = tk.NORMAL
     button2["bg"] = "white"
     button2["state"] = tk.NORMAL
     button3["bg"] = "white"
     button3["state"] = tk.NORMAL
+    problem_box["state"] = "readonly"
+    semantic_box["state"] = "readonly"
     #graph_reduc["state"] = tk.NORMAL
     textareaReduc.configure(state = "disabled")
 
@@ -343,8 +483,6 @@ def show_graph():
         #paf.toPaf(inputfile, fileformat)
         
         plt.clf()
-        
-        plt.rcParams["figure.figsize"] = (10,9)
         
         edgeList = []
         
@@ -370,13 +508,15 @@ def show_graph():
         weights = nx.get_edge_attributes(graph,'weight').values()
         pos = nx.planar_layout(graph)
         nx.draw(graph, pos, node_size=700, node_color='yellow', font_size=8, font_weight='bold', edge_color = colors, width = list(weights), arrowsize = 30, arrowstyle = "->", with_labels = True)
-
         
-        plt.tight_layout()
-        plt.savefig("Graph.png", format="PNG")
+        plt.tight_layout()        
+
+        plt.rcParams["figure.figsize"] = (10,9)
+        
+        plt.savefig("temp/Graph.png", format="PNG")
 
     else:
-        os.remove("Graph.png")
+        os.remove("temp/Graph.png")
         plt.close()
     
 # =============================================================================
@@ -455,20 +595,29 @@ def on_closing():
         for i in range(len(tempFile)):
             os.remove(tempFile[i])
         tempFile.clear()
-    ws.destroy()
-    ws.quit()
+    for file in os.scandir("temp"):
+        os.remove(file)
+    os.rmdir("temp")
+    window.destroy()
+    window.quit()
 
 textarea = tk.Text(frameDnD, height=18, width=41)
-textarea.grid(row = 0, column = 0, rowspan = 6, columnspan = 6)
+textarea.grid(row = 1, column = 0, rowspan = 6, columnspan = 6)
 textarea.drop_target_register(tkd.DND_FILES)
 textarea.dnd_bind('<<Drop>>', load_text)
-textarea.insert("end", "\n\nPlease drag a file here.\n\nAccepted formats are ptgf, papx,\ntgf or apx.")
+textarea.insert("end", "\n\nPlease drag a file here.\n\nOr click the 'open' button under this\nbox to select a file.\n\nAccepted formats are ptgf, papx,\ntgf or apx.")
 
 sbv = tk.Scrollbar(frameDnD, orient=tk.VERTICAL)
 sbv.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
 
 textarea.configure(yscrollcommand=sbv.set)
 sbv.config(command=textarea.yview)
+
+open_button = tk.Button(frameDnD, activebackground = "blue", bg = "white", text = "open", command = load_text_selection)
+open_button.grid(row = 7, column = 0, columnspan = 6)
+
+reload_button= tk.Button(frameDnD, activebackground = "red", bg = "white", text = "reload", command = reload_text, width = 46)
+reload_button.grid(row = 0, column = 0, columnspan = 6)
 
 graph_check_value = tk.IntVar()
 graph_check = tk.Checkbutton(frameDnD, disabledforeground = "yellow", text = "generate the graph", variable = graph_check_value, command = show_graph, onvalue = 1, state = tk.DISABLED)
@@ -482,6 +631,20 @@ formats_option.pack(side = tk.LEFT)
 
 save_option = tk.Button(optionframe, activebackground = "blue", bg = "white", text = "save", command = save)
 save_option.pack(side = tk.LEFT)
+
+task_label = tk.Label(taskframe, text = "Tasks :", justify = tk.CENTER)
+task_label.grid(row = 0, column = 1)
+
+problem_value = tk.StringVar()
+problem_box = ttk.Combobox(taskframe, values = ["DC","DS","SE","CE", "EE"], state = tk.DISABLED, textvariable = problem_value)
+problem_box.grid(row = 1, column = 0)
+
+semantic_value = tk.StringVar()
+semantic_box = ttk.Combobox(taskframe, values = ["CO","PR","ST","SST","STG","GR","ID"], state = tk.DISABLED, textvariable = semantic_value)
+semantic_box.grid(row = 1, column = 2)
+
+button0 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "no reduction", state = tk.DISABLED, command = ClickReduc0)
+button0.pack(side = tk.LEFT)
 
 button1 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "reduction 1", state = tk.DISABLED, command = ClickReduc1)
 button1.pack(side = tk.LEFT)
@@ -509,6 +672,6 @@ sbvR.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
 textareaReduc.configure(yscrollcommand = sbvR.set)
 sbvR.config(command = textareaReduc.yview)
 
-ws.protocol("WM_DELETE_WINDOW", on_closing)
+window.protocol("WM_DELETE_WINDOW", on_closing)
 
-ws.mainloop()
+window.mainloop()
