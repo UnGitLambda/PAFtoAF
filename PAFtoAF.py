@@ -167,6 +167,7 @@ def toPaf(inputFile, fileformat):
         print("Unsupported format ", fileformat,", suported formats are : ")
         print_formats()
         raise UnsupportedFormatException("Unsuported format : ", fileformat)
+
     file.flush()
     file.close()
 
@@ -182,11 +183,15 @@ def parse_ptgf(file):
     """
     
     assert type(file) is TextIOWrapper, "The agument of this method must be a file, opened using the open function, on which this will parse a PAF in the ptgf format. (type TextIOWrapper)"
-    
+
     c = file.readline()
     ct = 0
+    n_already = False
     while c != "":
         if c == "\n":
+            if n_already:
+                break
+            n_already= True
             continue
         elif c == "#\n":
             if ct<2:
@@ -216,8 +221,12 @@ def parse_papx(file):
     assert type(file) is TextIOWrapper, "The agument of this method must be a file, opened using the open function, on which this will parse a PAF in the ptgf format. (type TextIOWrapper)"
     
     c = file.readline()
+    n_already = False
     while c != "":
         if c == "\n":
+            if n_already:
+                break
+            n_already = True
             continue
         elif c[:3:1] == "arg":
             parse_argument_papx(c)
