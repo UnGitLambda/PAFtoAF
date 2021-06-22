@@ -5,13 +5,15 @@ Created on Mon May 31 2021
 @author: Eyal Cohen
 """
 
-from sys import argv
+from sys import argv, version_info
 from _io import TextIOWrapper
 from os import DirEntry
 import os
 import copy
 import platform
 import pathlib as pl
+
+assert version_info >= (3,0), "PAFtoAF runs under python 3 or more. To use it please get you version of python up to date."
 
 class UnsupportedFormatException(Exception):
     pass
@@ -317,7 +319,7 @@ def parse_preference_ptgf(c):
     arg2 = c[c.find(" ")+1::1] if c[-1]!="\n" else c[c.find(" ")+1:-1:1]
     if arg2 == "":
         raise FormatSyntaxException("Single argument found while parsing preferences : {}.".format(arg1))
-    elif arg1 in preferences[arg2]:
+    elif arg1 in preferences[arg2] or arg1 == arg2:
         print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
         raise PreferenceException("Ambiguious preferences")
     elif arg1 in args and arg2 in args:
@@ -344,7 +346,7 @@ def parse_preference_papx(c):
     arg2 = c[c.find(",")+1:c.find(")")]
     if arg1 == "" or arg2 == "":
         raise FormatSyntaxException("Single argument found while parsing attacks : pref({},{}).".format(arg1,arg2))
-    elif arg1 in preferences[arg2]:
+    elif arg1 in preferences[arg2] or arg1 == arg2:
         print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
         raise PreferenceException("Ambiguious preferences")
     elif arg1 in args and arg2 in args:
@@ -625,6 +627,10 @@ def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
             execCommand = solverExecutableCommand(solver, solver, False, Argv)
         else:
             execCommand = Path.__str__() + ' ' + paramSolver
+            if Path.__str__().endswith(".jar"):
+                execCommand = "java -jar " + execCommand
+            elif Path.__str__().endswith(".py"):
+                execCommand = "python3 " + execCommand
     return(execCommand)
 
 def solverName(file, solver):
@@ -750,8 +756,8 @@ def Solver(solverArgv):
         elif platform.system() == "Windows":
             solver = "jArgSemSAT.jar"
         else :
-            print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.")
-            raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.")
+            print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.\nIf you want to use our application nonetheless, pleas specify a solver and/or a path.")
+            raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nIf you want to use our application nonetheless, pleas specify a solver and/or a path.")
     return solver
 
 def solverPath_scan(solverArgv):
