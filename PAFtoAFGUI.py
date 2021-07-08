@@ -23,6 +23,7 @@ from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  Preferen
 inputfile = ''
 fileformat = ''
 task= ''
+query_bool = False
 query = ''
 outs = []
 tempFile = []
@@ -191,6 +192,17 @@ def load_text_selection():
     Sfile = tk.filedialog.askopenfilename(title = "Sélectionnez un fichier ..." , filetypes = typeslist)
     load_text_file(Sfile)
     
+def select_solver():
+    """
+    This method is the one used by the button open on the GUI.
+    It opens a window allowing the user to browse its file and then reads and load the selected file.
+    """
+    
+    typeslist = [("Executable", ".exe"), ("Python", ".py"), ("Java", ".java"), ("Other", ".*")]
+    Sfile = tk.filedialog.askopenfilename(title = "Sélectionnez un fichier ..." , filetypes = typeslist)
+    solver.delete(0, tk.END)
+    solver.insert(tk.END, Sfile)
+    
     
 def load_text_file(Sfile):
     """
@@ -332,28 +344,30 @@ solverframe.pack(side = BOTTOM)
 buttonframe = tk.Frame(ws, height = 5, width = 40)
 buttonframe.pack(side = BOTTOM)
 
+queryframe = tk.Frame(taskframe)
+
 def show_help():
     """
     The method linked to the help button, it creates a new window with nothing but a text area explaining the GUI.
     """
     help_window = tk.Tk()
     help_window.title("HELP")
-    help_window.geometry("686x520")
+    help_window.geometry("686x590")
     help_window.config(bg = "#dddddd")
-    help_frame = tk.Frame(help_window, height = 34, width = 86)
+    help_frame = tk.Frame(help_window, height = 38, width = 86)
     help_frame.pack()
-    help_text = tk.Text(help_frame, height = 32, width = 84)
+    help_text = tk.Text(help_frame, height = 36, width = 84)
     help_text.pack(side = TOP)
     help_text.insert("end", "This is the GUI version of PAFtoAF Version 1.0, created by Eyal Cohen.\n")
     help_text.insert("end", "\nThis application allows you to use a Preference-based Argumentation Framework\n(PAF) and transform it into an Extension-based Argumentation Framework (AF).\n")
     help_text.insert("end", "\nTo do so, please choose a file in the ptgf, papx, tgf or apx format\n(for more information please click on the formats button in the main window).\n")
     help_text.insert("end", "\nDrag you file in the area specifying so or use the 'open' button to select one.\n(Don't forget to specify the format in the list or extensions)\nThe text in the file should now appear.\n")
     help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\n")
-    help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a ptg or apx format. The same chekbox is under this text area.")
-    help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the line all\nthe way down, in abscence of a name, mu-toksia will be selected under Linux\nand JArgSemSAT under Windows.\n")
+    help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a ptg or apx format. The graph is dynamically modified to represent\nthe current AF.\n")
+    help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the specified line,\nor use the open button to find it, its path will automatically be written\nin the box.\nIn abscence of a name or path mu-toksia will be selected under Linux and\nJArgSemSAT under Windows.\n")
     help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
     help_text.insert("end", "\nThe result should appear in the figure down below, if you want to dowload it\nplease indicate the path to the directory and then press the dowload button.\n")
-    help_text.insert("end", "\n Please do not alter the 'temp' directory. You can copy a file if needed,\nbut removing/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
+    help_text.insert("end", "\nPlease do not alter the 'temp' directory. You can copy a file if needed, but\nremoving/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
     help_text["state"] = DISABLED
 
 def show_formats():
@@ -431,8 +445,13 @@ def ClickReduc0():
     button3["state"] = NORMAL
     button4["bg"] = "white"
     button4["state"] = NORMAL
+    problem_box.set("")
+    semantic_box.set("")
     problem_box["state"] = DISABLED
     semantic_box["state"] = DISABLED
+    solver.delete(0, tk.END)
+    solver["state"] = DISABLED
+    solver_select_button["state"] = DISABLED
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc1():
@@ -472,6 +491,8 @@ def ClickReduc1():
     button4["state"] = NORMAL
     problem_box["state"] = "readonly"
     semantic_box["state"] = "readonly"
+    solver["state"] = NORMAL
+    solver_select_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc2():
@@ -511,6 +532,8 @@ def ClickReduc2():
     button4["state"] = NORMAL
     problem_box["state"] = "readonly"
     semantic_box["state"] = "readonly"
+    solver["state"] = NORMAL
+    solver_select_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc3():
@@ -550,6 +573,8 @@ def ClickReduc3():
     button4["state"] = NORMAL
     problem_box["state"] = "readonly"
     semantic_box["state"] = "readonly"
+    solver["state"] = NORMAL
+    solver_select_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc4():
@@ -589,16 +614,39 @@ def ClickReduc4():
     button3["state"] = NORMAL
     problem_box["state"] = "readonly"
     semantic_box["state"] = "readonly"
+    solver["state"] = NORMAL
+    solver_select_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
+
+def renew_query_frame():
+    queryframe = tk.Frame(taskframe)
+    
+    query_label = tk.Label(queryframe, text = "query : ")
+    query_label.grid(row = 0, column = 0)
+    
+    query_value= tk.StringVar()
+    query_entry = tk.Entry(queryframe, textvariable = query_value)
+    query_entry.grid(row = 0, column = 1)
 
 def problem_selection(event):
     """
     Linked to the problem selection combo box, this method check the selected value in the box and manages the other box according to what was chosen.
     """
+    global query_bool
+    global queryframe
     if problem_value.get() in ["CE", "EE", "DC"]:
         semantic_box["values"] = ["CO","PR","ST","SST","STG","GR"]
     else:
         semantic_box["values"] = ["CO","PR","ST","SST","STG","GR", "ID"]
+    if problem_value.get() in ["DC", "DS"] and not query_bool:
+        query_bool = True
+        task_label.grid(row = 0, column = 2)
+        queryframe.grid(row = 1, column = 3)
+    elif problem_value.get() in ["CE", "EE", "SE"] and query_bool:
+        query_bool = False
+        task_label.grid(row = 0, column = 1)
+        queryframe.grid_remove()
+        renew_query_frame()
 
 def semantic_selection(event):
     """
@@ -747,14 +795,27 @@ problem_box = ttk.Combobox(taskframe, values = ["DC","DS","SE","CE", "EE"], stat
 problem_box.bind("<<ComboboxSelected>>", problem_selection)
 problem_box.grid(row = 1, column = 0)
 
+query_label = tk.Label(queryframe, text = "query : ")
+query_label.grid(row = 0, column = 0)
+
+query_value= tk.StringVar()
+query_entry = tk.Entry(queryframe, textvariable = query_value)
+query_entry.grid(row = 0, column = 1)
+
 semantic_value = tk.StringVar()
 semantic_box = ttk.Combobox(taskframe, values = ["CO","PR","ST","SST","STG","GR","ID"], state = DISABLED, textvariable = semantic_value)
 semantic_box.bind("<<ComboboxSelected>>", semantic_selection)
 semantic_box.grid(row = 1, column = 2)
 
+solver_label = tk.Label(solverframe, text = "solver : ")
+solver_label.grid(row = 0, column = 0)
+
 solver_value = tk.StringVar()
 solver = tk.Entry(solverframe, textvariable = solver_value)
-solver.grid(row = 0, column = 0, columnspan = 2)
+solver.grid(row = 0, column = 1)
+
+solver_select_button = tk.Button(solverframe, activebackground = "red", bg = "white", text = "open", state = DISABLED, command = select_solver)
+solver_select_button.grid(row = 0, column = 2)
 
 button0 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "no reduction", state = DISABLED, command = ClickReduc0)
 button0.pack(side = LEFT)
