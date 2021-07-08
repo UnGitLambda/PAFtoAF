@@ -320,6 +320,7 @@ def parse_preference_ptgf(c):
     if arg2 == "":
         raise FormatSyntaxException("Single argument found while parsing preferences : {}.".format(arg1))
     elif arg1 in preferences[arg2] or arg1 == arg2:
+        print(c, "pref : ", (arg1,arg2))
         print("Ambiguious preferences : ", arg1, " and ", arg2, " are mutually preferred over the other.")
         raise PreferenceException("Ambiguious preferences")
     elif arg1 in args and arg2 in args:

@@ -15,6 +15,7 @@ from tkinter import DISABLED, NORMAL
 from tkinter import BOTTOM, TOP, LEFT, RIGHT#, CENTER
 from tkinter import ttk
 import networkx as nx
+from networkx import NetworkXException
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
 from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException#, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
@@ -38,6 +39,15 @@ if os.path.exists("temp"):
 os.mkdir("temp")
 
 def try_toPaf(file, fileformat = ''):
+    """
+    This method is just a toPaf that can manage the different possible Exceptions.
+    It is invoked every time we want to convert something to the PAF format in PAFtoAF : (set, dict, dict).
+    str * str -> None
+    """
+    
+    assert type(file) is str, "The first argument must be the name of the file. (type String)"
+    assert type(fileformat) is str, "The second argument must be the format of the file. (type String)"
+    
     if fileformat == '':
         try:
             paf.toPaf(file, "ptgf" if file.endswith(".ptgf") or file.endswith(".tgf") else "papx")
@@ -111,6 +121,12 @@ def try_toPaf(file, fileformat = ''):
             textareaReduc["state"] = DISABLED
 
 def load_text(event):
+    """
+    This method is binded to the drag and drop text area, it is invoked when someone drop a file,
+    and just load the text inside the file if the format is right and write an error message in the area if the format is not accepted.
+    Event -> None
+    """
+    
     textarea.delete("1.0","end")
     textareaReduc.delete("1.0","end")
     button0["bg"] = "white"
@@ -157,7 +173,6 @@ def load_text(event):
         button3["state"] = DISABLED
         button4["state"] = DISABLED
         graph_check["state"] = DISABLED
-        #graph_reduc["state"] = DISABLED
         paf.args.clear()
         paf.attacksFrom.clear()
         paf.preferences.clear()
@@ -167,12 +182,24 @@ def load_text(event):
         show_graph()
         
 def load_text_selection():
+    """
+    This method is the one used by the button open on the GUI.
+    It opens a window allowing the user to browse its file and then reads and load the selected file.
+    """
+    
     typeslist = [("PTFG file", ".ptgf"), ("PAPX file", ".papx"), ("TGF file", ".tgf"), ("APX file", ".apx")]
     Sfile = tk.filedialog.askopenfilename(title = "Sélectionnez un fichier ..." , filetypes = typeslist)
     load_text_file(Sfile)
     
     
 def load_text_file(Sfile):
+    """
+    This method is the same as load_text but works without an event, 
+    it just reads the file that the load_text_selection gave it and loads the text inside the same way, load_text does.
+    """
+    
+    assert type(Sfile) is str, "The argument of this method is the name of the fileis has to load. (type String)"
+    
     textarea.delete("1.0","end")
     textareaReduc["state"] = NORMAL
     textareaReduc.delete("1.0","end")
@@ -232,6 +259,10 @@ def load_text_file(Sfile):
         show_graph()
 
 def reload_text():
+    """
+    This method reads the text area and reload the text.
+    It means that the user can now modify the text inside the area to modify the PAF they want to generate.
+    """
     global inuptfile
     global fileformat
     if fileformat == '':
@@ -254,6 +285,10 @@ def reload_text():
     load_text_file(inputfile)
         
 def line_is_int(line):
+    """
+    This method verify if the line it receives is an int, it is used to get the format if the user writes the file or writes directly on the text area.
+    Object -> bool
+    """
     if type(line) is int:
         return(True)
     elif type(line) is str:
@@ -298,6 +333,9 @@ buttonframe = tk.Frame(ws, height = 5, width = 40)
 buttonframe.pack(side = BOTTOM)
 
 def show_help():
+    """
+    The method linked to the help button, it creates a new window with nothing but a text area explaining the GUI.
+    """
     help_window = tk.Tk()
     help_window.title("HELP")
     help_window.geometry("686x520")
@@ -316,9 +354,14 @@ def show_help():
     help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
     help_text.insert("end", "\nThe result should appear in the figure down below, if you want to dowload it\nplease indicate the path to the directory and then press the dowload button.\n")
     help_text.insert("end", "\n Please do not alter the 'temp' directory. You can copy a file if needed,\nbut removing/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
+    help_text["state"] = DISABLED
 
 def show_formats():
+    """
+    The method linked to the formats button, it creates a new window with nothing but a text explaining the formats and a button per format to see what each one means.
+    """
     def show_ptgf():
+        formats_text["state"] = NORMAL
         formats_text.delete("1.0", "end")
         formats_text.insert("end", "\nThe tgf (Trivial Graph Format) is a usualformat for files\ndescipting an AF.\n")
         formats_text.insert("end", "Here we add the preference side of a Preference-base AF (PAF).\n")
@@ -330,7 +373,9 @@ def show_formats():
         p_tgfButton["state"] = DISABLED
         p_apxButton["bg"] = "white"
         p_apxButton["state"] = NORMAL
+        formats_text["state"] = DISABLED
     def show_papx():
+        formats_text["state"] = NORMAL
         formats_text.delete("1.0", "end")
         formats_text.insert("end", "\nThe apx (Aspartix) is a usualformat for files\ndescipting an AF.\n")
         formats_text.insert("end", "Here we add the preference side of a Preference-base AF (PAF).\n")
@@ -342,6 +387,7 @@ def show_formats():
         p_apxButton["state"] = DISABLED
         p_tgfButton["bg"] = "white"
         p_tgfButton["state"] = NORMAL
+        formats_text["state"] = DISABLED
     formats_window = tk.Tk()
     formats_window.title("HELP")
     formats_window.geometry("686x480")
@@ -362,6 +408,9 @@ def show_formats():
     
     
 def ClickReduc0():
+    """
+    Linked to the 'no reduction' button. It clears the reduction text area and change the graph (if the checkbox is active to the PAF graph.
+    """
     global reduction
     global inputfile
     global fileformat
@@ -387,6 +436,10 @@ def ClickReduc0():
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc1():
+    """
+    Linked to the 'reduction 1' button. It overwrite the reduction text area with the reduction 1.
+    If the graph checkbox is active, it overwrites the graph with the resulting AF.
+    """
     global reduction
     global inputfile
     global outs
@@ -422,6 +475,10 @@ def ClickReduc1():
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc2():
+    """
+    Linked to the 'reduction 2' button. It overwrite the reduction text area with the reduction 2.
+    If the graph checkbox is active, it overwrites the graph with the resulting AF.
+    """
     global reduction
     global inputfile
     global outs
@@ -457,6 +514,10 @@ def ClickReduc2():
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc3():
+    """
+    Linked to the 'reduction 3' button. It overwrite the reduction text area with the reduction 3.
+    If the graph checkbox is active, it overwrites the graph with the resulting AF.
+    """
     global reduction
     global inputfile
     global outs
@@ -492,6 +553,10 @@ def ClickReduc3():
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc4():
+    """
+    Linked to the 'reduction 4' button. It overwrite the reduction text area with the reduction 4.
+    If the graph checkbox is active, it overwrites the graph with the resulting AF.
+    """
     global reduction
     global inputfile
     global outs
@@ -527,18 +592,27 @@ def ClickReduc4():
     textareaReduc.configure(state = "disabled")
 
 def problem_selection(event):
+    """
+    Linked to the problem selection combo box, this method check the selected value in the box and manages the other box according to what was chosen.
+    """
     if problem_value.get() in ["CE", "EE", "DC"]:
         semantic_box["values"] = ["CO","PR","ST","SST","STG","GR"]
     else:
         semantic_box["values"] = ["CO","PR","ST","SST","STG","GR", "ID"]
 
 def semantic_selection(event):
+    """
+    Linked to the semantic selection combo box, this method check the selected value in the box and manages the other box according to what was chosen.
+    """
     if semantic_value.get() == "ID":
         problem_box["values"] = ["DS","SE"]
     else:
         problem_box["values"] = ["DC","DS","SE","CE", "EE"]
 
 def show_graph():
+    """
+    Linked to the 'show graph' checkbox, this method creates a figure in which it draws the graph of the current reudction (PAF in case no reduction has been applied).
+    """
     global fig
     global inputfile
     
@@ -570,7 +644,10 @@ def show_graph():
         
         colors = nx.get_edge_attributes(graph,'color').values()
         weights = nx.get_edge_attributes(graph,'weight').values()
-        pos = nx.planar_layout(graph)
+        try:
+            pos = nx.planar_layout(graph)
+        except(NetworkXException):
+            pos = nx.spring_layout(graph)
         nx.draw(graph, pos, node_size=700, node_color='yellow', font_size=8, font_weight='bold', edge_color = colors, width = list(weights), arrowsize = 30, arrowstyle = "->", with_labels = True)
         
         plt.tight_layout()        
@@ -584,6 +661,10 @@ def show_graph():
         plt.close()
 
 def save():
+    """
+    This method is binded to the save button.
+    On activation it reads every useful information in the user's choices and writes the corresponding command line.
+    """
     global inputfile
     global fileformat
     global reduction
@@ -610,6 +691,10 @@ def save():
             file.write("-sp {}".format(solverPath))
 
 def on_closing():
+    """
+    This is the closing protocol, it is activated on the closing of the main window.
+    Its purpose is to delete every temporary file that has been created during the session and then to destroy the window.
+    """
     global graph_value
     if graph_check_value.get() == 1:
         graph_check.toggle()
@@ -668,7 +753,7 @@ semantic_box.bind("<<ComboboxSelected>>", semantic_selection)
 semantic_box.grid(row = 1, column = 2)
 
 solver_value = tk.StringVar()
-solver = tk.Entry(solverframe, text = "solver", textvariable = solver_value)
+solver = tk.Entry(solverframe, textvariable = solver_value)
 solver.grid(row = 0, column = 0, columnspan = 2)
 
 button0 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "no reduction", state = DISABLED, command = ClickReduc0)
