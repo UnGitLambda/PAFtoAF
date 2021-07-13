@@ -315,8 +315,8 @@ def parse_preference_ptgf(c):
     
     assert type(c) is str, "The argument in this method must be a string containing an argument in the format ptgf (or tgf). (type String)"
     
-    arg1 = c[:c.find(" "):1]
-    arg2 = c[c.find(" ")+1::1] if c[-1]!="\n" else c[c.find(" ")+1:-1:1]
+    arg1 = c[:c.find(" ")]
+    arg2 = c[c.find(" ")+1:] if c[-1]!="\n" else c[c.find(" ")+1:-1]
     if arg2 == "":
         raise FormatSyntaxException("Single argument found while parsing preferences : {}.".format(arg1))
     elif arg1 in preferences[arg2] or arg1 == arg2:
@@ -610,7 +610,13 @@ def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
     assert type(scan) is bool, "The thirst argument to this method must be a boolean indicating if we must (or not) scan the directory indicated by the path (if the path is a directory indeed). (type Boolean, default = false)"
     assert type(Argv) is list, "The fourth argument of this method are the arguments to pass on to the solver in the command line. (type List)"
     
-    Path = pl.PureWindowsPath(path)
+    if platform.system() == "Windows":
+        Path = pl.PureWindowsPath(path)
+    elif platform.system() in ["Linux", "Darwin"]:
+        Path = pl.PurePosixPath(path)
+    else:
+        print("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nSorry for the incunveniance.\nIf you want to use our application nonetheless, pleas specify a solver and/or a path.")
+        raise UnsupportedOSException("Your OS is not supported yet, we only work on Linux, macOS or Windows.\nIf you want to use our application nonetheless, pleas specify a solver and/or a path.")
     paramSolver = commandLine(Argv)
     if (Path == pl.Path(".")) or scan:
         if not os.path.isdir(Path):
@@ -642,8 +648,11 @@ def solverName(file, solver):
     
     assert type(file) is DirEntry, "The first argument in this method is the file we want to compare to the solver. (type DirEntry)"
     assert type(solver) is str, "The second argument of this method must be the name of the solver. (type String)"
-    
-    return(os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver)
+    if platform.system() == "Windows":
+        answer = os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(".py", "") == solver
+    else:
+        answer = os.fsdecode(file).replace("./","") == solver or os.fsdecode(file).replace("./","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace("./",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(".py", "") == solver
+    return(answer)
 
 def commandLine(Argv):
     """

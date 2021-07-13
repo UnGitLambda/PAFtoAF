@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("TkAgg")
+import sys
 import tkinter as tk
 from tkinter import DISABLED, NORMAL
 from tkinter import BOTTOM, TOP, LEFT, RIGHT#, CENTER
@@ -18,20 +19,27 @@ import networkx as nx
 from networkx import NetworkXException
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
+import platform
 from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException#, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
+from datetime import (date, datetime)
+
+system = platform.system()
+if system not in ["Windows", "Linux", "Darwin"]:
+    root = tk.Tk()
+    root.withdraw()
+    msg = tk.messagebox.showinfo("Error", "It looks like you system is not supported.\nSupported systems : Windows, Linux, Darwin(MacOS)\nYour system : {}".format(system))
+    while msg != "ok":
+        continue
+    sys.exit()
 
 inputfile = ''
 fileformat = ''
-task= ''
 query_bool = False
-query = ''
 outs = []
 tempFile = []
-solver = ''
 solverPath = ''
 reduction = 0
 fig = Figure()
-figReduc = Figure()
 
 if os.path.exists("temp"):
     for file in os.scandir("temp"):
@@ -78,14 +86,56 @@ def try_toPaf(file, fileformat = ''):
             textareaReduc.delete("1.0", "end")
             textareaReduc.insert("end", "Format syntax error :\n"+str(e))
             textareaReduc["state"] = DISABLED
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
         except PreferenceException as e:
             textareaReduc["state"] = NORMAL
             textareaReduc.delete("1.0", "end")
             textareaReduc.insert("end", "Preferences error :\n"+str(e))
             textareaReduc["state"] = DISABLED
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
         except UnsupportedFormatException as e:
             textarea.delete("1.0", "end")
             textarea.insert("end", "Unsupported format exception :\n", str(e))
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
     else:
         try:
             paf.toPaf(file, "ptgf" if fileformat in ["ptgf", "tgf"] else "papx")
@@ -93,6 +143,20 @@ def try_toPaf(file, fileformat = ''):
             print("It seems that the file you used as input can not be found anymore.")
             textarea.delete("1.0", "end")
             textarea.insert("end", "It seems that the file you used as input can not be found anymore.")
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
         except (IOError, OSError) as e:
             print("System Error")
             
@@ -115,11 +179,39 @@ def try_toPaf(file, fileformat = ''):
             textareaReduc.delete("1.0", "end")
             textareaReduc.insert("end", "Format syntax error :\n"+str(e))
             textareaReduc["state"] = DISABLED
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
         except PreferenceException as e:
             textareaReduc["state"] = NORMAL
             textareaReduc.delete("1.0", "end")
             textareaReduc.insert("end", "Preferences error :\n"+str(e))
             textareaReduc["state"] = DISABLED
+            problem_box.set("")
+            semantic_box.set("")
+            problem_box["state"] = DISABLED
+            semantic_box["state"] = DISABLED
+            solver.delete(0, tk.END)
+            solver["state"] = DISABLED
+            solver_select_button["state"] = DISABLED
+            solver_find_button["state"] = DISABLED
+            button0["state"] = DISABLED
+            button1["state"] = DISABLED
+            button2["state"] = DISABLED
+            button3["state"] = DISABLED
+            button4["state"] = DISABLED
+            graph_check["state"] = DISABLED
 
 def load_text(event):
     """
@@ -144,7 +236,6 @@ def load_text(event):
             for line in file:
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
-        try_toPaf(event.data)
         button0["bg"] = "red"
         button0["state"] = DISABLED
         button1["state"] = NORMAL
@@ -152,6 +243,7 @@ def load_text(event):
         button3["state"] = NORMAL
         button4["state"] = NORMAL
         graph_check["state"] = NORMAL
+        try_toPaf(event.data)
     elif event.data.endswith(".tgf") or event.data.endswith(".apx"):
         inputfile = event.data
         fileformat = "tgf" if event.data.endswith(".tgf") else "apx"
@@ -159,7 +251,6 @@ def load_text(event):
             for line in file:
                 line=line.strip()
                 textarea.insert("end",f"{line}\n")
-        try_toPaf(event.data)
         button0["bg"] = "red"
         button0["state"] = DISABLED
         button1["state"] = NORMAL
@@ -167,6 +258,7 @@ def load_text(event):
         button3["state"] = NORMAL
         button4["state"] = NORMAL
         graph_check["state"] = NORMAL
+        try_toPaf(event.data)
     else:
         button0["state"] = DISABLED
         button1["state"] = DISABLED
@@ -197,13 +289,35 @@ def select_solver():
     This method is the one used by the button open on the GUI.
     It opens a window allowing the user to browse its file and then reads and load the selected file.
     """
-    
-    typeslist = [("Executable", ".exe"), ("Python", ".py"), ("Java", ".java"), ("Other", ".*")]
+    global solverPath
+    typeslist = [("Executable", ".exe"), ("Python", ".py"), ("Java", ".jar"), ("Other", ".*")]
     Sfile = tk.filedialog.askopenfilename(title = "Sélectionnez un fichier ..." , filetypes = typeslist)
+    solverPath = Sfile
     solver.delete(0, tk.END)
     solver.insert(tk.END, Sfile)
     
-    
+def find_solver():
+    global solverPath
+    found = True
+    solver_name = solver_value.get()
+    if os.path.exists(solver_name):
+        if os.path.isdir(solver_name):
+            found = False
+            for file in os.scandir(solver_name):
+                if os.fsdecode(file) in ["mu-toksia", "mu-toksia.exe", "JargSemSAT.jar"]:
+                    solverPath = os.path.abspath(solver_name + os.fsdecode(file))
+                    found = True
+        else:
+            solverPath = os.path.abspath(solver_name)
+    else:
+        found = False
+    if not found:
+        solver.delete(0,tk.END)
+        solver.insert(tk.END, "Not found")
+    else:
+        solver.delete(0,tk.END)
+        solver.insert(tk.END, solverPath)
+
 def load_text_file(Sfile):
     """
     This method is the same as load_text but works without an event, 
@@ -286,12 +400,11 @@ def reload_text():
         else:
             textareaReduc["state"] = NORMAL
             textareaReduc.delete("1.0","end")
-            textareaReduc.insert("end", "\nThe text written in the box next to this one does not follow an accepted format.\n Please consult the format option button for more information.\n")
+            textareaReduc.insert("end", "\nThe text written in the box next to this one does not follow an accepted format.\nPlease consult the format option button for more information.\n")
             textareaReduc["state"] = DISABLED
             return 0
     inputfile = "temp/reloading_text.{}".format(fileformat)
     with(open(inputfile, "w+") as openfile):
-        print(textarea.get("1.0","end"))
         openfile.write(textarea.get("1.0", "end"))
         
     load_text_file(inputfile)
@@ -403,14 +516,14 @@ def show_formats():
         p_tgfButton["state"] = NORMAL
         formats_text["state"] = DISABLED
     formats_window = tk.Tk()
-    formats_window.title("HELP")
+    formats_window.title("FORMATS")
     formats_window.geometry("686x480")
     formats_window.config(bg = "#dddddd")
     formats_frame = tk.Frame(formats_window, height = 30, width = 86)
     formats_frame.pack()
     accepted_formats_text = tk.Text(formats_frame, height = 4, width = 84)
     accepted_formats_text.pack(side = TOP)
-    formats_text = tk.Text(formats_frame, height = 28, width = 84)
+    formats_text = tk.Text(formats_frame, height = 28, width = 84, state = DISABLED)
     buttonsframe = tk.Frame(formats_frame, height = 5, width = 84)
     buttonsframe.pack(side = TOP)
     p_tgfButton = tk.Button(buttonsframe, text = "tgf and ptgf", bg = "white", activebackground = "red", command = show_ptgf)
@@ -420,7 +533,138 @@ def show_formats():
     formats_text.pack(side = TOP)
     accepted_formats_text.insert("end", "The formats accepted are ptgf, papx, tgf, and apx.\n")
     
+def show_problems():
+    def CO():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Complete :\nS is in CO(F) iff :\n-S is in ADM(F)\n-for every a in A that is defended by S, a is in S.\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are complete : {1,4,6}, {1, 3} or {1}.")
+        sem_text["state"] = DISABLED
+    def PR():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Prefered :\nS is in PR(F) iff :\n-S is a maximal admissible set.\n")
+        sem_text("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is preferred : {1,4,6}.")
+        sem_text["state"] = DISABLED
+    def ST():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Stable :\n")
+        sem_text("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are stable : ")
+        sem_text["state"] = DISABLED
+    def SST():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Semi-Stable :\n")
+        sem_text["state"] = DISABLED
+    def STG():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Staged :\n")
+        sem_text["state"] = DISABLED
+    def GR():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Grounded :\n")
+        sem_text["state"] = DISABLED
+    def ID():
+        sem_text["state"] = NORMAL
+        sem_text.delete("1.0", "end")
+        sem_text.insert("end", "Ideal :\n")
+        sem_text["state"] = DISABLED
+    def DC():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Decide Credulously :\n")
+        task_text["state"] = DISABLED
+    def DS():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Decide Skeptically :\n")
+        task_text["state"] = DISABLED
+    def SE():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Some Extension :\n")
+        task_text["state"] = DISABLED
+    def CE():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Count Extension :\n")
+        task_text["state"] = DISABLED
+    def EE():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Enumerate Extensions :\n")
+        task_text["state"] = DISABLED
+    switcher_semantics = {
+        "" : print,
+        "CO" : CO,
+        "PR" : PR,
+        "ST" : ST,
+        "SST" : SST,
+        "STG" : STG,
+        "GR" : GR,
+        "ID" : ID
+        }
+    switcher_tasks = {
+        "" : print,
+        "DC" : DC,
+        "DS" : DS,
+        "SE" : SE,
+        "CE" : CE,
+        "EE" : EE
+        }
+    def sem_select(event):
+        switcher_semantics[sem_box.get()]() 
+    def task_select(event):
+        switcher_tasks[task_box.get()]()
+    #I know it is weird to get from the box instead of from the StringVar()
+    #But the sem_val and task_val are empty when I do a .get() and I don't know why
+    #I even tried making the variable global but it does not change anything
+        
+    problems_window = tk.Tk()
+    problems_window.title("PROBLEMS")
+    problems_window.geometry("696x480")
+    problems_window.config(bg = "#dddddd")
     
+    problems_frame = tk.Frame(problems_window, height = 30, width = 86)
+    problems_frame.pack()
+    
+    explication_text = tk.Text(problems_frame, height = 12, width = 84)
+    explication_text.grid(row = 0, column = 0, columnspan = 10, rowspan = 6)
+    explication_text.delete("1.0","end")
+    explication_text.insert("end", "'Problems' are the computational problems that you want to submit to the program.\nA problem is composed of :\n-a semantic : a meaning, a logic\n-a task : that will be resolved with respect to the semantic.\n")
+    explication_text.insert("end", "Now we must introduce 2 notions.\nGiven an AF F = <A,R>. With A the arguments and R (included in A x A) the attacks.\nS a set or arguments in A is :\n")
+    explication_text.insert("end", "\n-Conflict-Free (CF) : iff for every a,b in S, (a,b) is not in R.\n")
+    explication_text.insert("end", "\n-Admissible (ADM) : iff S is CF and for every a in S, S defends a from any b\n(not in S) attacking a.\n")
+    explication_text["state"] = DISABLED
+    
+    boxframe = tk.Frame(problems_frame, width = 84)
+    boxframe.grid(row = 6, column = 0, columnspan = 10)
+    
+    sem_val = tk.StringVar()
+    sem_box = ttk.Combobox(boxframe, values = ["CO","PR","ST","SST","STG","GR","ID"], textvariable = sem_val, state = "readonly")
+    sem_box.bind("<<ComboboxSelected>>", sem_select)
+    sem_box.pack(side = LEFT)
+    
+    task_val = tk.StringVar()
+    task_box = ttk.Combobox(boxframe, values = ["DC","DS","SE","CE", "EE"], textvariable = task_val, state = "readonly")
+    task_box.bind("<<ComboboxSelected>>", task_select)
+    task_box.pack(side = RIGHT)
+    
+    explicationframe = tk.Frame(problems_frame, height = 16, width = 84)
+    explicationframe.grid(row = 7, column = 0, rowspan = 7, columnspan = 10)
+    
+    sem_text = tk.Text(explicationframe, height = 14, width = 40, state = DISABLED)
+    sem_text.grid(row = 0, column = 0, rowspan = 7, columnspan = 5)
+    
+    task_text = tk.Text(explicationframe, height = 14, width = 40, state = DISABLED)
+    task_text.grid(row = 0, column = 5, rowspan = 7, columnspan = 5)
+    
+    expli_empty_label = tk.Label(explicationframe, text = "", height = 1, width = 80)
+    expli_empty_label.grid(row = 7, column = 0, rowspan = 1, columnspan = 10)
+
 def ClickReduc0():
     """
     Linked to the 'no reduction' button. It clears the reduction text area and change the graph (if the checkbox is active to the PAF graph.
@@ -452,6 +696,8 @@ def ClickReduc0():
     solver.delete(0, tk.END)
     solver["state"] = DISABLED
     solver_select_button["state"] = DISABLED
+    solver_find_button["state"] = DISABLED
+    download_button["state"] = DISABLED
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc1():
@@ -493,6 +739,8 @@ def ClickReduc1():
     semantic_box["state"] = "readonly"
     solver["state"] = NORMAL
     solver_select_button["state"] = NORMAL
+    solver_find_button["state"] = NORMAL
+    download_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc2():
@@ -534,6 +782,8 @@ def ClickReduc2():
     semantic_box["state"] = "readonly"
     solver["state"] = NORMAL
     solver_select_button["state"] = NORMAL
+    solver_find_button["state"] = NORMAL
+    download_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc3():
@@ -575,6 +825,8 @@ def ClickReduc3():
     semantic_box["state"] = "readonly"
     solver["state"] = NORMAL
     solver_select_button["state"] = NORMAL
+    solver_find_button["state"] = NORMAL
+    download_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
 
 def ClickReduc4():
@@ -616,7 +868,29 @@ def ClickReduc4():
     semantic_box["state"] = "readonly"
     solver["state"] = NORMAL
     solver_select_button["state"] = NORMAL
+    solver_find_button["state"] = NORMAL
+    download_button["state"] = NORMAL
     textareaReduc.configure(state = "disabled")
+
+def download_reduc():
+    global inputfile
+    today = date.today()
+    now_time = datetime.now().strftime("%d-%m-%Y~%H_%M_%S")
+    directory = f"PAFtoAF_downloads_{today}"
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    else:
+        if not os.path.isdir(directory):
+            directory = directory+"_dir"
+            os.mkdir(directory)
+    if inputfile.find("\\") != -1:
+        filename = inputfile[inputfile.rfind("\\")+1:inputfile.rfind("".join([".", fileformat]))]
+    elif inputfile.find("/") != -1:
+        filename = inputfile[inputfile.rfind("/")+1:inputfile.rfind("".join([".", fileformat]))]
+    else :
+         filename = inputfile[:inputfile.rfind("".join([".", fileformat]))]
+    with(open(f"{directory}/reduction{reduction}_{filename}_{now_time}.{('tgf', 'apx')[fileformat == 'papx']}", "w+") as openfile):
+        openfile.write(textareaReduc.get("1.0", "end"))
 
 def renew_query_frame():
     queryframe = tk.Frame(taskframe)
@@ -763,7 +1037,7 @@ textarea.dnd_bind('<<Drop>>', load_text)
 textarea.insert("end", "\n\nPlease drag a file here.\n\nOr click the 'open' button under this\nbox to select a file.\n\nAccepted formats are ptgf, papx,\ntgf or apx.")
 
 sbv = tk.Scrollbar(frameDnD, orient=tk.VERTICAL)
-sbv.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
+sbv.grid(row = 1, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
 
 textarea.configure(yscrollcommand=sbv.set)
 sbv.config(command=textarea.yview)
@@ -783,6 +1057,9 @@ help_option.pack(side = LEFT)
 
 formats_option = tk.Button(optionframe, activebackground = "red", bg = "white", text = "Formats", command = show_formats)
 formats_option.pack(side = LEFT)
+
+problems_option = tk.Button(optionframe, activebackground = "red", bg = "white", text = "Problems", command = show_problems)
+problems_option.pack(side = LEFT)
 
 save_option = tk.Button(optionframe, activebackground = "blue", bg = "white", text = "save", command = save)
 save_option.pack(side = LEFT)
@@ -814,8 +1091,11 @@ solver_value = tk.StringVar()
 solver = tk.Entry(solverframe, textvariable = solver_value)
 solver.grid(row = 0, column = 1)
 
-solver_select_button = tk.Button(solverframe, activebackground = "red", bg = "white", text = "open", state = DISABLED, command = select_solver)
+solver_select_button = tk.Button(solverframe, activebackground = "blue", bg = "white", text = "open", state = DISABLED, command = select_solver)
 solver_select_button.grid(row = 0, column = 2)
+
+solver_find_button = tk.Button(solverframe, activebackground = "red", bg = "white", text = "find", state = DISABLED, command = find_solver)
+solver_find_button.grid(row = 1, column = 1)
 
 button0 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = "no reduction", state = DISABLED, command = ClickReduc0)
 button0.pack(side = LEFT)
@@ -833,11 +1113,17 @@ button4 = tk.Button(buttonframe, activebackground = "red", bg = "white", text = 
 button4.pack(side = LEFT)
 
 textareaReduc = tk.Text(frameReduction, height=18, width=41)
-textareaReduc.grid(row = 0, column = 0, rowspan = 6, columnspan = 6)
+textareaReduc.grid(row = 1, column = 0, rowspan = 6, columnspan = 6)
 textareaReduc.configure(state = "disabled")
 
 sbvR = tk.Scrollbar(frameReduction, orient=tk.VERTICAL)
-sbvR.grid(row = 0, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
+sbvR.grid(row = 1, column = 7, rowspan = 6, columnspan = 6, sticky = tk.NS)
+
+download_button= tk.Button(frameReduction, activebackground = "red", bg = "white", text = "download", command = download_reduc, width = 46, state = DISABLED)
+download_button.grid(row = 0, column = 0, columnspan = 6)
+
+empty_reduc_label = tk.Label(frameReduction, text = " ")
+empty_reduc_label.grid(row = 7, column = 0)
 
 textareaReduc.configure(yscrollcommand = sbvR.set)
 sbvR.config(command = textareaReduc.yview)

@@ -170,18 +170,18 @@ def generate_PAF(nodes, fileformat = "ptgf"):
         attsFrom[arg] = set()
         prefs[arg] = set()
     edge_list = []
-    new_file()
     #file = toFILE((arg_gen, attsFrom, prefs), fileformat)
     yield(arg_gen, attsFrom, prefs)
     for arg1 in range(nodes+1):
         for arg2 in range(nodes+1):
             edge_list.append((arg1,arg2))
     pref_list = edge_list.copy()
+    for i in range(nodes+1):
+        pref_list.remove((i,i))
     num_PAF = (1, 2**nodes + 1)[nodes != 0]
     for i in range(num_PAF):
         copy_prefs.clear()
         add_pref = False
-        new_file()
         lim = 0
         if r.random()>0.25 and len(edge_list)!=0:
                 att = r.choice(edge_list)
@@ -204,8 +204,7 @@ def generate_PAF(nodes, fileformat = "ptgf"):
                 if pref[0] in copy_prefs[pref[1]] or pref[0] == pref[1]:
                     error = PreferenceException
                     fileformat = ("ptgf", "papx")[file.endswith("papx") or file.endswith("apx")]
-                    errfile = toFILE((arg_gen, attsFrom, copy_prefs), fileformat, "pref_error")
-                    new_file()
+                    errfile = toFILE((arg_gen, attsFrom, prefs), fileformat, "pref_error")
                 preferences += 1
             except(IndexError):
                 continue
@@ -219,7 +218,7 @@ def generate_PAF(nodes, fileformat = "ptgf"):
             if suppress:
                 os.remove(errfile)
             else:
-                os.rename(errfile, errfile+".log")
+                os.rename(errfile, errfile+".logerr")
             error = None
 
 def new_file():
@@ -324,7 +323,7 @@ def toPAPX(PAF, offset):
 #             else: raise paf.FormatSyntaxException("Format Syntax Error while testing.")
 # =============================================================================
 
-def test(timeout, start_nodes = 0, fileformat = "ptgf"):
+def test_toPAF(timeout, start_nodes = 0, fileformat = "ptgf"):
     global count
     global file
     nodes = start_nodes
@@ -335,6 +334,12 @@ def test(timeout, start_nodes = 0, fileformat = "ptgf"):
             sortie = time.time()-start>timeout
             file = toFILE(actual_PAF, fileformat)
             try_toPaf(file, fileformat)
+            if error is not None:
+                os.remove(file)
+            elif not keep:
+                os.remove(file)
+            else:
+                os.rename(file, f"{file}.log")
             count += 1
             if(sortie):break
         nodes += 1
@@ -344,11 +349,9 @@ os.mkdir(dir_name)
 
 os.chdir(dir_name)
 
-test(10)
+test_toPAF(10)
 
 os.chdir("..")
-
-#for file in os.scandir(dir_name):
-#    os.remove(file)
     
-#os.rmdir(dir_name)
+if len(os.listdir()) == 0:
+    os.rmdir(dir_name)
