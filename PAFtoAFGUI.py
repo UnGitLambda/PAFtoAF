@@ -13,7 +13,7 @@ matplotlib.use("TkAgg")
 import sys
 import tkinter as tk
 from tkinter import DISABLED, NORMAL
-from tkinter import BOTTOM, TOP, LEFT, RIGHT#, CENTER
+from tkinter import BOTTOM, TOP, LEFT, RIGHT
 from tkinter import ttk
 import networkx as nx
 from networkx import NetworkXException
@@ -538,24 +538,25 @@ def show_problems():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
         sem_text.insert("end", "Complete :\nS is in CO(F) iff :\n-S is in ADM(F)\n-for every a in A that is defended by S, a is in S.\n")
-        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are complete : {1,4,6}, {1, 3} or {1}.")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are complete :\n{1,4,6}, {1, 3} or {1}.\n{1,3,4,6} is not in CO(F) because it\nis not in CF(F) so not in ADM(F).\n(3 and 4 attack each other)")
         sem_text["state"] = DISABLED
     def PR():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
         sem_text.insert("end", "Prefered :\nS is in PR(F) iff :\n-S is a maximal admissible set.\n")
-        sem_text("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is preferred : {1,4,6}.")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are preferred :\n{1,4,6}, {1,3}.\n{1} is not prefered since it is\nincluded in {1,4,6} (and in {1,3}) so\nit is not maximal.")
         sem_text["state"] = DISABLED
     def ST():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Stable :\n")
-        sem_text("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following sets are stable : ")
+        sem_text.insert("end", "Stable :\nS is in ST(F) iff :\n-S is in CF(F)\n-S attacks every a in A\\S\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is stable :\n{1,4,6}.\n{1,3} is not stable because 5, 6 and 7 are not\nattacked and not in S.")
         sem_text["state"] = DISABLED
     def SST():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Semi-Stable :\n")
+        sem_text.insert("end", "Semi-Stable :\nS is in SST(F) iff :\n-S is in CO(F)\n-S# is maximal, there is not S2 such that S# is included in S2#\nEvery S in ST(F) is in SST(F), but the\nconverse is not true.\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is semi-stable :\n{1,4,6} since it is stable.\nBut in this AF :\nA\nB\nC\nD\nA A\nA C\nB C\nC D\nThe following set is semi-stable\nbut not stable : {B,D}\n")
         sem_text["state"] = DISABLED
     def STG():
         sem_text["state"] = NORMAL
@@ -631,14 +632,22 @@ def show_problems():
     problems_frame = tk.Frame(problems_window, height = 30, width = 86)
     problems_frame.pack()
     
-    explication_text = tk.Text(problems_frame, height = 12, width = 84)
+    top_frame = tk.Frame(problems_frame)
+    top_frame.grid(row = 0, column = 0, columnspan = 12, rowspan = 6)
+    explication_text = tk.Text(top_frame, height = 12, width = 84)
     explication_text.grid(row = 0, column = 0, columnspan = 10, rowspan = 6)
     explication_text.delete("1.0","end")
     explication_text.insert("end", "'Problems' are the computational problems that you want to submit to the program.\nA problem is composed of :\n-a semantic : a meaning, a logic\n-a task : that will be resolved with respect to the semantic.\n")
-    explication_text.insert("end", "Now we must introduce 2 notions.\nGiven an AF F = <A,R>. With A the arguments and R (included in A x A) the attacks.\nS a set or arguments in A is :\n")
+    explication_text.insert("end", "Now we must introduce some notions.\nGiven an AF F = <A,R>. With A the arguments and R (included in A x A) the attacks.\nS a set or arguments in A is :\n")
     explication_text.insert("end", "\n-Conflict-Free (CF) : iff for every a,b in S, (a,b) is not in R.\n")
     explication_text.insert("end", "\n-Admissible (ADM) : iff S is CF and for every a in S, S defends a from any b\n(not in S) attacking a.\n")
+    explication_text.insert("end", "\n-The range of S is S and every argument it attacks, let us note it S# \n(formally it is a small circled + in the top right corner of the letter)\n")
     explication_text["state"] = DISABLED
+    
+    sbv_explication = tk.Scrollbar(top_frame, orient = tk.VERTICAL)
+    sbv_explication.grid(row = 0, column = 12, rowspan = 6, columnspan = 1, sticky = tk.NS)
+    explication_text.configure(yscrollcommand = sbv_explication.set)
+    sbv_explication.config(command = explication_text.yview)
     
     boxframe = tk.Frame(problems_frame, width = 84)
     boxframe.grid(row = 6, column = 0, columnspan = 10)
@@ -656,11 +665,27 @@ def show_problems():
     explicationframe = tk.Frame(problems_frame, height = 16, width = 84)
     explicationframe.grid(row = 7, column = 0, rowspan = 7, columnspan = 10)
     
-    sem_text = tk.Text(explicationframe, height = 14, width = 40, state = DISABLED)
-    sem_text.grid(row = 0, column = 0, rowspan = 7, columnspan = 5)
+    sem_frame = tk.Frame(explicationframe)
     
-    task_text = tk.Text(explicationframe, height = 14, width = 40, state = DISABLED)
-    task_text.grid(row = 0, column = 5, rowspan = 7, columnspan = 5)
+    sem_text = tk.Text(sem_frame, height = 14, width = 40, state = DISABLED)
+    sem_text.grid(row = 0, column = 0, rowspan = 7, columnspan = 4)
+    sem_frame.grid(row = 0, column = 0, rowspan = 7, columnspan = 5)
+    
+    sbv_sem = tk.Scrollbar(sem_frame, orient=tk.VERTICAL)
+    sbv_sem.grid(row = 0, column = 4, rowspan = 6, columnspan = 1, sticky = tk.NS)
+    sem_text.configure(yscrollcommand = sbv_sem.set)
+    sbv_sem.config(command = sem_text.yview)
+    
+    task_frame = tk.Frame(explicationframe)
+    
+    task_text = tk.Text(task_frame, height = 14, width = 40, state = DISABLED)
+    task_text.grid(row = 0, column = 0, rowspan = 7, columnspan = 4)
+    task_frame.grid(row = 0, column = 5, rowspan = 7, columnspan = 5)
+    
+    sbv_task = tk.Scrollbar(task_frame, orient=tk.VERTICAL)
+    sbv_task.grid(row = 0, column = 4, rowspan = 6, columnspan = 1, sticky = tk.NS)
+    task_text.configure(yscrollcommand = sbv_task.set)
+    sbv_task.config(command = task_text.yview)
     
     expli_empty_label = tk.Label(explicationframe, text = "", height = 1, width = 80)
     expli_empty_label.grid(row = 7, column = 0, rowspan = 1, columnspan = 10)
@@ -995,7 +1020,7 @@ def save():
     global query
     global solver 
     global solverPath
-    with(open("PAFtoAFGUI-saved-{}-{}.txt".format(os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction), "w+")) as file:
+    with(open("PAFtoAFGUI-saved-{}-{}-{}.txt".format(os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction, datetime.now().strftime("%d_%m_%Y_%H-%M-%S")), "w+")) as file:
         file.write("python3 PAFtoAF")
         if inputfile != '':
             file.write("-f {} -fo {}".format(inputfile, fileformat))
@@ -1003,7 +1028,7 @@ def save():
             file.write("-r {}".format(reduction))
         if outs != []:
             file.write("-outs {}".format(outs))
-        if task != '':
+        if semantic_value.get() != '' and problem_value.get() != '':
             file.write("-p {}".format(task))
             if query != '':
                 file.write("-a {}".format(query))
