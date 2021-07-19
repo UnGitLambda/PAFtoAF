@@ -44,71 +44,91 @@ args = set()
 attacksFrom = dict()
 preferences = dict()
 
-def print_help():
+def print_help(ret = False):
     """
     Invoked when the user asks for help with the [--help] prameter
     """
-    print("-f <file> -fo <format> [-p <task>] [-r <reduction>] [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
-    print("<task> is the computational problem, use --problems to see the ones supported")
-    print("<file> is the input, the preference-based argumentation framework")
-    print("<format> file format for input PAF; for a list of available formats use option --formats")
-    print("<reduction> is the reduction to use to get an AF from the input PAF, use --reductions to see the available reductions")
-    print("<query> used for prblems DC and/or DS, it is the argument concerned by the problem")
-    print("<filename> is the output for the resulting AF to be printed on, if you want the output to be on the terminal use stdout as filename.")
-    print("If you wish to have multiple prints (for exemple one on the terminal and one on a file) state every file this way : [file1,file2,file3...]")
-    print("The names of the files must contain their format (Exemple : [stdout, file.tgf, file2.apx])")
-    print("<solvername> is the name of the solver, if none is indicated, on linux mu-toksia will be chosen as default and on windows, jArgSemSAT will.")
-    print("<solverpath> is the path from the root to acces the solver.") 
-    print("If none is entered the program will scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.")
-    print("Options :")
-    print("--help prints this message.")
-    print("--problems prints the lists of available computational problems.")
-    print("--formats prints the list of accepted file formats.")
-    print("--reductions prints the available reductions for a PAF.")
-    print("--informations for informations about the version and the author.")
+    s = ("-f <file> -fo <format> [-p <task>] [-r <reduction>] [-a <query>] [-out <filename(s)>] [-s <solvername>] [-sp <solverpath>]\n")
+    s += ("\n<task> is the computational problem, use --problems to see the ones supported")
+    s += ("\n<file> is the input, the preference-based argumentation framework")
+    s += ("\n<format> file format for input PAF; for a list of available formats use option --formats")
+    s += ("\n<reduction> is the reduction to use to get an AF from the input PAF, use --reductions to see the available reductions")
+    s += ("\n<query> used for prblems DC and/or DS, it is the argument concerned by the problem")
+    s += ("\n<filename> is the output for the resulting AF to be printed on, if you want the output to be on the terminal use stdout as filename.")
+    s += ("\nIf you wish to have multiple prints (for exemple one on the terminal and one on a file) state every file this way : [file1,file2,file3...]")
+    s += ("\nThe names of the files must contain their format (Exemple : [stdout, file.tgf, file2.apx])")
+    s += ("\n<solvername> is the name of the solver, if none is indicated, on linux mu-toksia will be chosen as default and on windows, jArgSemSAT will.")
+    s += ("\n<solverpath> is the path from the root to acces the solver.") 
+    s += ("\nIf none is entered the program will scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.")
+    s += ("\nOptions :")
+    s += ("\n--help prints this message.")
+    s += ("\n--problems prints the lists of available computational problems.")
+    s += ("\n--formats prints the list of accepted file formats.")
+    s += ("\n--reductions prints the available reductions for a PAF.")
+    s += ("\n--informations for informations about the version and the author.")
+    if ret:
+        return(s)
+    else:
+        print(s)
 
-def print_problems():
+def print_problems(ret = False):
     """
     Invoked when the user wishes to see the available prblems with the [--problems] parameter
     """
+    s = ""
     for i in ["CO","PR","ST","SST","STG","GR","ID"]:
-        print()
+        s += "\n"
         for j in ["DC","DS","SE","CE", "EE"]:
             problem = "{}-{}".format(j,i)
             if problem == "CE-ID" or problem == "DC-ID" or problem == "EE-ID": #CE-ID = 1 so EE-ID = SE-ID and DC-ID = DS-ID so we only consider SE-ID and DS-ID
                 continue
             else:
-                print("[",problem,"]", sep = '', end = (", ", "")[problem == "SE-ID"]) #just to avoid putting a , after the last problem (SE-ID)
+                s += "[" + problem+ "]" + (", ", "")[problem == "SE-ID"] #just to avoid putting a , after the last problem (SE-ID)
+    if ret:
+        return(s)
+    else:
+        print(s)
 
-def print_formats():
-    print("Preference-based Trivial Graph Format [.ptgf]")
-    print("One argument per line, indicated by his name, followed by a #.\n Then the attacks are witten as follow : arg1 arg2, one attack per line also.")
-    print("A second # indicates the beginning of the preferences' listing, they are written the same way attacks are.")
-    print("Here is an exemple : \n1\n2\n3\n#\n1 2\n2 3\n2 1\n#\n1 2")
-    print("\n")
-    print("Preference-based ASPARTIX Format [.papx]")
-    print("Arguments are written as arg(1), attacks as att(1,2) and preferences as pref(1,2).")
-    print("Here is an exemple :\narg(1)\narg(2)\narg(3)\natt(1,2)\natt(2,3)\natt(2,1)\npref(1,2)")
+def print_formats(ret = False):
+    form = ("Preference-based Trivial Graph Format [.ptgf]")
+    form += ("\nOne argument per line, indicated by his name, followed by a #.\n Then the attacks are witten as follow : arg1 arg2, one attack per line also.")
+    form += ("\nA second # indicates the beginning of the preferences' listing, they are written the same way attacks are.")
+    form += ("\nHere is an exemple : \n1\n2\n3\n#\n1 2\n2 3\n2 1\n#\n1 2")
+    form += ("\n\n")
+    form += ("\nPreference-based ASPARTIX Format [.papx]")
+    form += ("\nArguments are written as arg(1), attacks as att(1,2) and preferences as pref(1,2).")
+    form += ("\nHere is an exemple :\narg(1)\narg(2)\narg(3)\natt(1,2)\natt(2,3)\natt(2,1)\npref(1,2)")
+    if ret:
+        return(form)
+    else:
+        print(form)
 
-def print_reductions():
-    print("Reductions are a way to 'extract' an AF from a PAF.")
-    print("When applying a reduction to a PAF we focus on a peculiar type of attack :")
-    print("The attacks we focus on are called 'critical attacks', they correspond to A attacks B but B is prefered over A.")
-    print("There are 4 kinds of reduction :")
-    print("The first one nullifies critical attacks.")
-    print("The second reduction reverses critical attacks.")
-    print("The third option is to keep a critical attack if and only if the opposite attack does not exist.")
-    print("The fourth one creates a symetrical attack to critical ones.")
-    print("\n")
-    print("As an exemple lets take : \natt(1,2)\npref(2,1)")
-    print("R1 : no attack remains in the resulting AF.")
-    print("R2 : att(2,1) is in the resulting AF.")
-    print("R3 : att(1,2) is kept in the AF.")
-    print("R4 : att(1,2) and att(2,1) are in the resulting AF.\n")
+def print_reductions(ret = False):
+    redu = ("Reductions are a way to 'extract' an AF from a PAF.")
+    redu += ("\nWhen applying a reduction to a PAF we focus on a peculiar type of attack :")
+    redu += ("\nThe attacks we focus on are called 'critical attacks', they correspond to A attacks B but B is prefered over A.")
+    redu += ("\nThere are 4 kinds of reduction :")
+    redu += ("\nThe first one nullifies critical attacks.")
+    redu += ("\nThe second reduction reverses critical attacks.")
+    redu += ("\nThe third option is to keep a critical attack if and only if the opposite attack does not exist.")
+    redu += ("\nThe fourth one creates a symetrical attack to critical ones.")
+    redu += ("\n\n")
+    redu += ("\nAs an exemple lets take : \natt(1,2)\npref(2,1)")
+    redu += ("\nR1 : no attack remains in the resulting AF.")
+    redu += ("\nR2 : att(2,1) is in the resulting AF.")
+    redu += ("\nR3 : att(1,2) is kept in the AF.")
+    redu += ("\nR4 : att(1,2) and att(2,1) are in the resulting AF.\n")
+    if ret:
+        return(redu)
+    else:
+        print(redu)
 
-def print_informations():
-    print("PAFtoAF version 1.0")
-    print("Author : Eyal Cohen")
+def print_informations(ret = False):
+    info = "PAFtoAF version 1.0\nAuthor : Eyal Cohen"
+    if ret:
+        return(info)
+    else:
+        print(info)
 
 switcher_options = {
         "--help" : print_help,
@@ -799,12 +819,20 @@ def doTask(file = 'Reduction0-AF-tmp.tgf', fileformat = 'tgf', reduction = '0', 
             os.remove("Reduction{}-AF-tmp.{}".format(reduction, 'tgf' if fileformat =="ptgf" else "apx"))
             return(sysOutput)
 
-def main(argc, argv):
+def main(ARGC, ARGV, ret = False):
+    global argv
+    global argc
+    argv = copy.deepcopy(ARGV)
+    argc = ARGC
     if argc == 1:
-        print_informations()
+        if ret:
+            return(print_informations(ret))
+        print_informations(ret)
 
     elif argc == 2:
-        switcher_options.get(argv[1])()
+        if ret:
+            return(switcher_options.get(argv[1])(ret))
+        switcher_options.get(argv[1])(ret)
 
     else:
         solverArgv = argv.copy()
@@ -815,7 +843,10 @@ def main(argc, argv):
         reduction = applyReduction(file, FileFormat, solverArgv)
         sysOutput = doTask(file, FileFormat, reduction, solverArgv, programPath)
         if sysOutput is not None:
-            for i in sysOutput:
-                print(i)
+            if ret:
+                return(sysOutput)
+            else:
+                for i in sysOutput:
+                    print(i)
 
 main(len(argv), argv)

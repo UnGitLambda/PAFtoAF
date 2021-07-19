@@ -430,7 +430,7 @@ def line_is_int(line):
 
 window = tkd.TkinterDnD.Tk()
 window.title('PAFtoAF')
-window.geometry('750x600')
+window.geometry('750x800')
 window.config(bg='#554356')
 
 ws = tk.Frame(window)
@@ -447,6 +447,9 @@ frameDnD.pack(side = LEFT)
 
 frameReduction = tk.Frame(frame, height = 23, width = 41)
 frameReduction.pack(side = RIGHT)
+
+compute_frame = tk.Frame(ws)
+compute_frame.pack(side = BOTTOM)
 
 taskframe = tk.Frame(ws)
 taskframe.pack(side = BOTTOM)
@@ -555,48 +558,56 @@ def show_problems():
     def SST():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Semi-Stable :\nS is in SST(F) iff :\n-S is in CO(F)\n-S# is maximal, there is not S2 such that S# is included in S2#\nEvery S in ST(F) is in SST(F), but the\nconverse is not true.\n")
-        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is semi-stable :\n{1,4,6} since it is stable.\nBut in this AF :\nA\nB\nC\nD\nA A\nA C\nB C\nC D\nThe following set is semi-stable\nbut not stable : {B,D}\n")
+        sem_text.insert("end", "Semi-Stable :\nS is in SST(F) iff :\n-S is in CO(F)\n-S# is maximal, there is no S2 such that S# is included in S2#\nEvery S in ST(F) is in SST(F), but the\nconverse is not true.\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is semi-stable :\n{1,4,6} since it is stable.\nBut in this AF :\nA\nB\nC\nD\nA A\nA C\nB C\nC D\nThe following set is semi-stable\nbut not stable : {B,D}")
         sem_text["state"] = DISABLED
     def STG():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Staged :\n")
+        sem_text.insert("end", "Staged :\nS is in STG(F) iff :\n-S is in CF(F)\n-S# is maximal, there is no S2 such that S# is included in S2#\nEvery S in ST(F) S is in STG(F), if\nF has at least one stable extension,\nthen every S in STG(F) is also in ST(F).\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is staged :\n{1,4,6} since it is stable.\nBut in this AF :\nA\nB\nA A\nA B\n{B} is staged and not stable,\nbecause there is not stable extension\nin this AF.")
         sem_text["state"] = DISABLED
     def GR():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Grounded :\n")
+        sem_text.insert("end", "Grounded :\nS is in GR(F) iff :\n-S is a minimal complete extension\nThere is no S2 in CO(F) such that S2 is\nincluded in (or equal to) S.\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is grounded :\n{1}.\n{1,3} is not grounded, because {1} is complete and included in it.\n")
         sem_text["state"] = DISABLED
     def ID():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
-        sem_text.insert("end", "Ideal :\n")
+        sem_text.insert("end", "Ideal :\nS is in ID(F) iff :\n-S is in ADM(F)\n-S is included the intersection of\nevery S_i in PR(F)\n-S is maximal in term of inclusion\nthere is no S2 in ADM(F) and in\nthe intersection of every S_i in PR(f)\nsuch that S is included in S2.\n\nThere is only one set in ID(F).\n")
+        sem_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nThe following set is ideal :\n{1}.")
         sem_text["state"] = DISABLED
     def DC():
         task_text["state"] = NORMAL
         task_text.delete("1.0", "end")
-        task_text.insert("end", "Decide Credulously :\n")
+        task_text.insert("end", "Decide Credulously :\nGiven an AF F, an argument (query) a in\nA and a semantic sem,\nsees if the argument is in the union of\nevery S in sem(F).\nFor ID(F) DC and DS are the same task\nsince there is a single ideal extension.\n")
+        task_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nCO-DC would answer :\nYES for every a in {1,3,4,6}\nNO for a in {2,5,7}.")
         task_text["state"] = DISABLED
     def DS():
         task_text["state"] = NORMAL
         task_text.delete("1.0", "end")
-        task_text.insert("end", "Decide Skeptically :\n")
-        task_text["state"] = DISABLED
-    def SE():
-        task_text["state"] = NORMAL
-        task_text.delete("1.0", "end")
-        task_text.insert("end", "Some Extension :\n")
+        task_text.insert("end", "Decide Skeptically :\nGiven an AF F, an argument (query) a in\nA and a semantic sem,\nsees if the argument is in the intersection of\nevery S in sem(F).\nFor ID(F) DC and DS are the same task\nsince there is a single ideal\nextension.\n")
+        task_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nCO-DS would answer :\nYES for every a in {1}\nNO for a in {2,3,4,5,6,7}.")
         task_text["state"] = DISABLED
     def CE():
         task_text["state"] = NORMAL
         task_text.delete("1.0", "end")
-        task_text.insert("end", "Count Extension :\n")
+        task_text.insert("end", "Count Extension :\nGiven an AF F and a semantic sem, give the number\nof extensions in sem(F).\nThere is always only one ideal extension.\nSo CE-ID has always 1 for answer.\n")
+        task_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nPR-CE would answer 2.")
+        task_text["state"] = DISABLED
+    def SE():
+        task_text["state"] = NORMAL
+        task_text.delete("1.0", "end")
+        task_text.insert("end", "Some Extension :\nGiven and AF F and a smenatic sem, give\none extension in sem(F).\nFor ID(F) EE and CE are the same thing since there\n is only one extension in ID(F).\n")
+        task_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nSTG-SE would answer {1,4,6}.")
         task_text["state"] = DISABLED
     def EE():
         task_text["state"] = NORMAL
         task_text.delete("1.0", "end")
-        task_text.insert("end", "Enumerate Extensions :\n")
+        task_text.insert("end", "Enumerate Extensions :\nGiven and AF F and a smenatic sem, enumerate\nevery extension in sem(F).\nFor ID(F) EE and CE are the same thing since there\n is only one extension in ID(F).\n")
+        task_text.insert("end", "\nFor exemple in the following AF :\n1\n2\n3\n4\n5\n6\n7\n1 2\n2 3\n3 4\n4 3\n4 5\n5 6\n6 7\n7 5\nCO-SE would answer :\n{1,4,6}, {1, 3}, {1}.")
         task_text["state"] = DISABLED
     switcher_semantics = {
         "" : print,
@@ -612,8 +623,8 @@ def show_problems():
         "" : print,
         "DC" : DC,
         "DS" : DS,
-        "SE" : SE,
         "CE" : CE,
+        "SE" : SE,
         "EE" : EE
         }
     def sem_select(event):
@@ -658,7 +669,7 @@ def show_problems():
     sem_box.pack(side = LEFT)
     
     task_val = tk.StringVar()
-    task_box = ttk.Combobox(boxframe, values = ["DC","DS","SE","CE", "EE"], textvariable = task_val, state = "readonly")
+    task_box = ttk.Combobox(boxframe, values = ["DC","DS","CE","SE","EE"], textvariable = task_val, state = "readonly")
     task_box.bind("<<ComboboxSelected>>", task_select)
     task_box.pack(side = RIGHT)
     
@@ -954,7 +965,7 @@ def semantic_selection(event):
     if semantic_value.get() == "ID":
         problem_box["values"] = ["DS","SE"]
     else:
-        problem_box["values"] = ["DC","DS","SE","CE", "EE"]
+        problem_box["values"] = ["DC","DS","CE","SE","EE"]
 
 def show_graph():
     """
@@ -989,6 +1000,8 @@ def show_graph():
                     
         graph.add_edges_from(critical_edges, color = "r", weight = 3)
         
+        graph.graph["edge"] = {"arrowsize" : "3", "splines" : "curved"}
+        
         colors = nx.get_edge_attributes(graph,'color').values()
         weights = nx.get_edge_attributes(graph,'weight').values()
         try:
@@ -1007,6 +1020,13 @@ def show_graph():
         os.remove("temp/Graph.png")
         plt.close()
 
+def compute():
+    com = command_line("compute").split()
+    return_text["state"] = NORMAL
+    for w in paf.main(len(com), com, True):
+        return_text.insert("end", w)
+    return_text["state"] = DISABLED
+
 def save():
     """
     This method is binded to the save button.
@@ -1016,26 +1036,50 @@ def save():
     global fileformat
     global reduction
     global outs
-    global task
-    global query
     global solver 
     global solverPath
-    with(open("PAFtoAFGUI-saved-{}-{}-{}.txt".format(os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction, datetime.now().strftime("%d_%m_%Y_%H-%M-%S")), "w+")) as file:
-        file.write("python3 PAFtoAF")
-        if inputfile != '':
-            file.write("-f {} -fo {}".format(inputfile, fileformat))
-        if reduction != 0:
-            file.write("-r {}".format(reduction))
-        if outs != []:
-            file.write("-outs {}".format(outs))
-        if semantic_value.get() != '' and problem_value.get() != '':
-            file.write("-p {}".format(task))
-            if query != '':
-                file.write("-a {}".format(query))
-        if solver != '':
-            file.write("-s {}".format(solver))
-        if solverPath != '':
-            file.write("-sp {}".format(solverPath))
+    today = date.today()
+    directory = f"PAFtoAF_downloads_{today}"
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    else:
+        if not os.path.isdir(directory):
+            directory = directory+"_dir"
+            os.mkdir(directory)
+    with(open("{}/PAFtoAFGUI-saved-{}-{}-{}.txt".format(directory, os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction, datetime.now().strftime("%d_%m_%Y_%H-%M-%S")), "w+")) as file:
+        file.write(command_line("save"))
+            
+def command_line(mode):
+    global inputfile
+    global fileformat
+    global reduction
+    global outs
+    global solver 
+    global solverPath
+    if mode == "save":
+        com = "python3 PAFtoAF "
+    if mode == "compute":
+        if os.path.exists("PAFtoAF.py"):
+            com = os.getcwd() + "\\PAFtoAF.py "
+        else:
+            return_text["state"] = NORMAL
+            return_text.insert("end", "For this application to work proprely, please put the PAFtoAF.py file\nin the same folder as this one (PAFtoAFGUI.py)\n")
+            return_text["state"] = DISABLED
+    if inputfile != '':
+        com += "-f {} -fo {} ".format(inputfile, fileformat)
+    if reduction != 0:
+        com += "-r {} ".format(reduction)
+    if outs != []:
+        com += "-outs {} ".format(outs)
+    if semantic_value.get() != '' and problem_value.get() != '':
+        com += "-p {}-{} ".format(semantic_value.get(), problem_value.get())
+        if query.get() != '':
+            com += "-a {} ".format(query.get())
+    if solver_value.get() != '':
+        com += "-s {} ".format(solver.get())
+    if solverPath != '':
+        com += "-sp {} ".format(solverPath)
+    return(com)
 
 def on_closing():
     """
@@ -1093,21 +1137,24 @@ task_label = tk.Label(taskframe, text = "Tasks :", justify = tk.CENTER)
 task_label.grid(row = 0, column = 1)
 
 problem_value = tk.StringVar()
-problem_box = ttk.Combobox(taskframe, values = ["DC","DS","SE","CE", "EE"], state = DISABLED, textvariable = problem_value)
+problem_box = ttk.Combobox(taskframe, values = ["DC","DS","CE","SE","EE"], state = DISABLED, textvariable = problem_value)
 problem_box.bind("<<ComboboxSelected>>", problem_selection)
 problem_box.grid(row = 1, column = 0)
 
 query_label = tk.Label(queryframe, text = "query : ")
 query_label.grid(row = 0, column = 0)
 
-query_value= tk.StringVar()
-query_entry = tk.Entry(queryframe, textvariable = query_value)
+query= tk.StringVar()
+query_entry = tk.Entry(queryframe, textvariable = query)
 query_entry.grid(row = 0, column = 1)
 
 semantic_value = tk.StringVar()
 semantic_box = ttk.Combobox(taskframe, values = ["CO","PR","ST","SST","STG","GR","ID"], state = DISABLED, textvariable = semantic_value)
 semantic_box.bind("<<ComboboxSelected>>", semantic_selection)
 semantic_box.grid(row = 1, column = 2)
+
+empty_task_label = tk.Label(taskframe, text = "")
+empty_task_label.grid(row = 2, column = 0, columnspan = 3, rowspan = 2)
 
 solver_label = tk.Label(solverframe, text = "solver : ")
 solver_label.grid(row = 0, column = 0)
@@ -1152,6 +1199,19 @@ empty_reduc_label.grid(row = 7, column = 0)
 
 textareaReduc.configure(yscrollcommand = sbvR.set)
 sbvR.config(command = textareaReduc.yview)
+
+compute_button = tk.Button(compute_frame, height = 8, width = 68, text = "COMPUTE", activebackground = "yellow", bg = "blue", command = compute)
+compute_button.pack(side = TOP)
+
+empty_compute_label = tk.Label(compute_frame, height = 2, width = 68)
+empty_compute_label.pack(side = TOP)
+
+return_text = tk.Text(compute_frame, height = 4, width = 68)
+return_text.pack(side = TOP)
+return_text.configure(state = "disabled")
+
+empty_compute_label2 = tk.Label(compute_frame, height = 2, width = 68)
+empty_compute_label2.pack(side = TOP)
 
 window.protocol("WM_DELETE_WINDOW", on_closing)
 
