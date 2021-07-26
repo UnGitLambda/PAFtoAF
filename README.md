@@ -23,17 +23,17 @@ Make sure to keep both files in the same directory or the GUI might not work.
 ### Command Line
 
 To use PAFtoAF using a terminal here is the list of parameters and options you can use :  
-  - -f <file>, the input, the preference-based argumentation framework.  
-  - -fo <format>, the format of the input file, for a list of supported formats use the option --formats.  
-  - [-p <task>], the computational problem, use --problems to see the ones supported.  
-  - [-r <reduction>], the reduction you want to use on the PAF, use --reductions to see the available reductions.  
-  - [-a <query>], used for prblems DC and/or DS, it is the argument concerned by the problem.  
-  - [-out <filename(s)>], the output for the resulting AF to be printed on,
+  - -f \<file\>, the input, the preference-based argumentation framework.  
+  - -fo \<format\>, the format of the input file, for a list of supported formats use the option --formats.  
+  - [-p \<task\>], the computational problem, use --problems to see the ones supported.  
+  - [-r \<reduction\>], the reduction you want to use on the PAF, use --reductions to see the available reductions.  
+  - [-a \<query\>], used for prblems DC and/or DS, it is the argument concerned by the problem.  
+  - [-out \<filename(s)\>], the output for the resulting AF to be printed on,
   if you want the output to be on the terminal use stdout as filename, if you wish to have the AF printed to  multiple files,
   state every file this way : [file1, file2, file3...].  
-  - [-s <solvername>], the name of the solver you want to use to compute your task (if none is indicated,
+  - [-s \<solvername\>], the name of the solver you want to use to compute your task (if none is indicated,
   mu-toksia will be chosen as default on windows and jArgSemSAT on Linux and MacOS.  
-  - [-sp <solverpath>], the path to the solver, if none is indicated the program will 
+  - [-sp \<solverpath\>], the path to the solver, if none is indicated the program will 
   scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.  
   Options :
   - --help prints this message.  
