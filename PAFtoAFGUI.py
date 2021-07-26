@@ -944,7 +944,7 @@ def download_reduc():
         filename = inputfile[inputfile.rfind("/")+1:inputfile.rfind("".join([".", fileformat]))]
     else :
          filename = inputfile[:inputfile.rfind("".join([".", fileformat]))]
-    withopen(f"{directory}/reduction{reduction}_{filename}_{now_time}.{('tgf', 'apx')[fileformat == 'papx']}", "w+") as openfile:
+    with open(f"{directory}/reduction{reduction}_{filename}_{now_time}.{('tgf', 'apx')[fileformat == 'papx']}", "w+") as openfile:
         openfile.write(textareaReduc.get("1.0", "end"))
 
 def renew_query_frame():
