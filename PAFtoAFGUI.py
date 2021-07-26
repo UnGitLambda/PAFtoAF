@@ -20,7 +20,7 @@ from networkx import NetworkXException
 import TkinterDnD2 as tkd
 import PAFtoAF as paf
 import platform
-from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException#, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
+from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
 from datetime import (date, datetime)
 
 system = platform.system()
@@ -35,7 +35,6 @@ if system not in ["Windows", "Linux", "Darwin"]:
 inputfile = ''
 fileformat = ''
 query_bool = False
-outs = []
 tempFile = []
 solverPath = ''
 reduction = 0
@@ -221,12 +220,15 @@ def load_text(event):
     """
     
     textarea.delete("1.0","end")
+    textareaReduc["state"] = NORMAL
     textareaReduc.delete("1.0","end")
+    textareaReduc["state"] = DISABLED
     button0["bg"] = "white"
     button1["bg"] = "white"
     button2["bg"] = "white"
     button3["bg"] = "white"
     button4["bg"] = "white"
+    ClickReduc0()
     global inputfile
     global fileformat
     if event.data.endswith(".ptgf") or event.data.endswith(".papx"):
@@ -276,7 +278,7 @@ def load_text(event):
         
 def load_text_selection():
     """
-    This method is the one used by the button open on the GUI.
+    This method is the one used by the button open (for the files) on the GUI.
     It opens a window allowing the user to browse its file and then reads and load the selected file.
     """
     
@@ -286,8 +288,8 @@ def load_text_selection():
     
 def select_solver():
     """
-    This method is the one used by the button open on the GUI.
-    It opens a window allowing the user to browse its file and then reads and load the selected file.
+    This method is the one used by the button open (for the solver) on the GUI.
+    It opens a window allowing the user to browse its file and select the solver.
     """
     global solverPath
     typeslist = [("Executable", ".exe"), ("Python", ".py"), ("Java", ".jar"), ("Other", ".*")]
@@ -297,6 +299,10 @@ def select_solver():
     solver.insert(tk.END, Sfile)
     
 def find_solver():
+    """
+    This method is linked to the find button (under the solver entry).
+    It scans the current directory and see if it can find the solver, if it can it will write its path in the entry, if not it will write 'not found'.
+    """
     global solverPath
     found = True
     solver_name = solver_value.get()
@@ -335,6 +341,7 @@ def load_text_file(Sfile):
     button2["bg"] = "white"
     button3["bg"] = "white"
     button4["bg"] = "white"
+    ClickReduc0()
     global inputfile
     global fileformat
     global reduction
@@ -404,7 +411,7 @@ def reload_text():
             textareaReduc["state"] = DISABLED
             return 0
     inputfile = "temp/reloading_text.{}".format(fileformat)
-    with(open(inputfile, "w+") as openfile):
+    with open(inputfile, "w+") as openfile:
         openfile.write(textarea.get("1.0", "end"))
         
     load_text_file(inputfile)
@@ -464,7 +471,7 @@ queryframe = tk.Frame(taskframe)
 
 def show_help():
     """
-    The method linked to the help button, it creates a new window with nothing but a text area explaining the GUI.
+    The method linked to the help button (in the option frame), it creates a new window with nothing but a text area explaining the GUI.
     """
     help_window = tk.Tk()
     help_window.title("HELP")
@@ -488,7 +495,8 @@ def show_help():
 
 def show_formats():
     """
-    The method linked to the formats button, it creates a new window with nothing but a text explaining the formats and a button per format to see what each one means.
+    The method linked to the formats button (in the option frame).
+    It creates a new window with a text and 2 buttons explaining the formats and a button per format to see what each one means.
     """
     def show_ptgf():
         formats_text["state"] = NORMAL
@@ -537,6 +545,10 @@ def show_formats():
     accepted_formats_text.insert("end", "The formats accepted are ptgf, papx, tgf, and apx.\n")
     
 def show_problems():
+    """
+    This method is linked to the 'problems' button (in the option frame).
+    It creates a window with a small text and 2 comboBox exaplaining every semantic and every task.
+    """
     def CO():
         sem_text["state"] = NORMAL
         sem_text.delete("1.0", "end")
@@ -703,7 +715,7 @@ def show_problems():
 
 def ClickReduc0():
     """
-    Linked to the 'no reduction' button. It clears the reduction text area and change the graph (if the checkbox is active to the PAF graph.
+    Linked to the 'no reduction' button. It clears the reduction text area and change the graph (if the checkbox is active) to the PAF graph.
     """
     global reduction
     global inputfile
@@ -726,10 +738,13 @@ def ClickReduc0():
     button4["bg"] = "white"
     button4["state"] = NORMAL
     problem_box.set("")
+    problem_value.set("")
     semantic_box.set("")
+    semantic_value.set("")
     problem_box["state"] = DISABLED
     semantic_box["state"] = DISABLED
     solver.delete(0, tk.END)
+    solver_value.set("")
     solver["state"] = DISABLED
     solver_select_button["state"] = DISABLED
     solver_find_button["state"] = DISABLED
@@ -909,6 +924,10 @@ def ClickReduc4():
     textareaReduc.configure(state = "disabled")
 
 def download_reduc():
+    """
+    This method is binded to the 'download' button (above the reduction text area).
+    It writes the reduction in a new file.
+    """
     global inputfile
     today = date.today()
     now_time = datetime.now().strftime("%d-%m-%Y~%H_%M_%S")
@@ -925,10 +944,13 @@ def download_reduc():
         filename = inputfile[inputfile.rfind("/")+1:inputfile.rfind("".join([".", fileformat]))]
     else :
          filename = inputfile[:inputfile.rfind("".join([".", fileformat]))]
-    with(open(f"{directory}/reduction{reduction}_{filename}_{now_time}.{('tgf', 'apx')[fileformat == 'papx']}", "w+") as openfile):
+    withopen(f"{directory}/reduction{reduction}_{filename}_{now_time}.{('tgf', 'apx')[fileformat == 'papx']}", "w+") as openfile:
         openfile.write(textareaReduc.get("1.0", "end"))
 
 def renew_query_frame():
+    """
+    This method is invoked to reset the query frame, it happens when the user select a new task that is not relative to an argument.
+    """
     queryframe = tk.Frame(taskframe)
     
     query_label = tk.Label(queryframe, text = "query : ")
@@ -1021,15 +1043,25 @@ def show_graph():
         plt.close()
 
 def compute():
+    """
+    This method is linked to the COMPUTE button.
+    It takes every information given by the user and runs the PAFtoAF.py file.
+    It then writes what is returned in the text area below.
+    """
     com = command_line("compute").split()
     return_text["state"] = NORMAL
-    for w in paf.main(len(com), com, True):
-        return_text.insert("end", w)
-    return_text["state"] = DISABLED
+    try:
+        for w in paf.main(len(com), com, True):
+            return_text.insert("end", w)
+        return_text["state"] = DISABLED
+    except (UnsupportedFormatException, FormatSyntaxException,  PreferenceException, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException) as e:
+        return_text.insert("end", e.name)
+        return_text.insert("end", ":")
+        return_text.insert("end", str(e))
 
 def save():
     """
-    This method is binded to the save button.
+    This method is binded to the save button (in the option frame).
     On activation it reads every useful information in the user's choices and writes the corresponding command line.
     """
     global inputfile
@@ -1046,14 +1078,17 @@ def save():
         if not os.path.isdir(directory):
             directory = directory+"_dir"
             os.mkdir(directory)
-    with(open("{}/PAFtoAFGUI-saved-{}-{}-{}.txt".format(directory, os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction, datetime.now().strftime("%d_%m_%Y_%H-%M-%S")), "w+")) as file:
+    with open("{}/PAFtoAFGUI-saved-{}-{}-{}.txt".format(directory, os.path.basename(inputfile).replace(".{}".format(fileformat),""), reduction, datetime.now().strftime("%d_%m_%Y_%H-%M-%S")), "w+") as file:
         file.write(command_line("save"))
             
 def command_line(mode):
+    """
+    This method is used by the method save and by compute.
+    It reads the information the user provided in the GUI and return a command line correspoonding to what the user wants to do.
+    """
     global inputfile
     global fileformat
     global reduction
-    global outs
     global solver 
     global solverPath
     if mode == "save":
@@ -1069,8 +1104,6 @@ def command_line(mode):
         com += "-f {} -fo {} ".format(inputfile, fileformat)
     if reduction != 0:
         com += "-r {} ".format(reduction)
-    if outs != []:
-        com += "-outs {} ".format(outs)
     if semantic_value.get() != '' and problem_value.get() != '':
         com += "-p {}-{} ".format(semantic_value.get(), problem_value.get())
         if query.get() != '':

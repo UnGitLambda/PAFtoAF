@@ -16,27 +16,35 @@ import pathlib as pl
 assert version_info >= (3,0), "PAFtoAF runs under python 3 or more. To use it please get you version of python up to date."
 
 class UnsupportedFormatException(Exception):
+    name = "Unsupported Format Exception"
     pass
 
 class FormatException(Exception):
+    name = "Format Exception"
     pass
 
 class FormatSyntaxException(Exception):
+    name = "Format Syntax Excpetion"
     pass
 
 class PreferenceException(Exception):
+    name = "Preferenec Exception"
     pass
 
 class ParsingException(Exception):
+    name = "Parsing Exception"
     pass
 
 class CommandLineException(Exception):
+    name = "Command Line Exception"
     pass
 
 class FindingSolverException(Exception):
+    name = "Finding Solver Exception"
     pass
 
 class UnsupportedOSException(Exception):
+    name = "Unsupported OS Exception"
     pass
 
 #We define these here to share them between functions
@@ -131,12 +139,17 @@ def print_informations(ret = False):
         print(info)
 
 switcher_options = {
-        "--help" : print_help,
-        "--problems" : print_problems,
-        "--formats" : print_formats,
-        "--reductions" : print_reductions,
-        "--informations" : print_informations
-        }
+    "-help" : print_help,
+    "--help" : print_help,
+    "-problems" : print_problems,
+    "--problems" : print_problems,
+    "-formats" : print_formats,
+    "--formats" : print_formats,
+    "-reductions" : print_reductions,
+    "--reductions" : print_reductions,
+    "-informations" : print_informations,
+    "--informations" : print_informations
+    }
 
 def outputs():
     """
