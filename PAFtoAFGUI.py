@@ -475,21 +475,28 @@ def show_help():
     """
     help_window = tk.Tk()
     help_window.title("HELP")
-    help_window.geometry("686x590")
+    help_window.geometry("696x590")
     help_window.config(bg = "#dddddd")
     help_frame = tk.Frame(help_window, height = 38, width = 86)
     help_frame.pack()
     help_text = tk.Text(help_frame, height = 36, width = 84)
-    help_text.pack(side = TOP)
+    help_text.grid(column = 0, row = 0, columnspan = 10, rowspan = 10)
+    
+    sbv_help = tk.Scrollbar(help_frame, orient = tk.VERTICAL)
+    sbv_help.grid(row = 0, column = 10, rowspan = 10, columnspan = 1, sticky = tk.NS)
+    help_text.configure(yscrollcommand = sbv_help.set)
+    sbv_help.config(command = help_text.yview)
+    
     help_text.insert("end", "This is the GUI version of PAFtoAF Version 1.0, created by Eyal Cohen.\n")
     help_text.insert("end", "\nThis application allows you to use a Preference-based Argumentation Framework\n(PAF) and transform it into an Extension-based Argumentation Framework (AF).\n")
     help_text.insert("end", "\nTo do so, please choose a file in the ptgf, papx, tgf or apx format\n(for more information please click on the formats button in the main window).\n")
     help_text.insert("end", "\nDrag you file in the area specifying so or use the 'open' button to select one.\n(Don't forget to specify the format in the list or extensions)\nThe text in the file should now appear.\n")
     help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\n")
-    help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a ptg or apx format. The graph is dynamically modified to represent\nthe current AF.\n")
+    help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a tgf or apx format. The graph is dynamically modified to represent\nthe current AF.\n")
     help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the specified line,\nor use the open button to find it, its path will automatically be written\nin the box.\nIn abscence of a name or path mu-toksia will be selected under Linux and\nJArgSemSAT under Windows.\n")
+    help_text.insert("end", "After indicatinf or selecting your solver, click on the Find button, the path\nto the solver should now appear in the box.\n")
     help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
-    help_text.insert("end", "\nThe result should appear in the figure down below, if you want to dowload it\nplease indicate the path to the directory and then press the dowload button.\n")
+    help_text.insert("end", "\nThen you can click the COMPUTE button.\nThe result should appear in the figure down below.\nIf you click the COMPUTE button while everything is empty it\nshould write the information about the author and the version in the box.\n")
     help_text.insert("end", "\nPlease do not alter the 'temp' directory. You can copy a file if needed, but\nremoving/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
     help_text["state"] = DISABLED
 
