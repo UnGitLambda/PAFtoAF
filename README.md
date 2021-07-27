@@ -18,6 +18,11 @@ PAFtoAF requires python 3.X, the python libraries : sys, os, copy, platform, pat
 PAFtoAFGUI also requires the libraries : matplotlib, tkinter, networkx, TkinterDnD2, datetime.  
 Make sure to keep both files in the same directory or the GUI might not work.  
 
+#### PAFtoAFcheckup  
+
+To make sure every python library is installed (and accessible) and that python's version is up to date  
+please run the PAFtoAFcheckup.py file that will inform you of every missing module.
+
 ## How to use it
 
 ### Command Line
