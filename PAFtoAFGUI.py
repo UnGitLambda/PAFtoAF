@@ -5,34 +5,34 @@ Created in 07/2021
 @author: Eyal Cohen
 """
 
-import os
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use("TkAgg")
-import sys
-import tkinter as tk
-from tkinter import DISABLED, NORMAL
-from tkinter import BOTTOM, TOP, LEFT, RIGHT
-from tkinter import ttk
-import networkx as nx
-from networkx import NetworkXException
-import TkinterDnD2 as tkd
-import PAFtoAF as paf
-import platform
-from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
-from datetime import (date, datetime)
-
-system = platform.system()
-if system not in ["Windows", "Linux", "Darwin"]:
-    root = tk.Tk()
-    root.withdraw()
-    msg = tk.messagebox.showinfo("Error", "It looks like you system is not supported.\nSupported systems : Windows, Linux, Darwin(MacOS)\nYour system : {}".format(system))
-    while msg != "ok":
-        continue
-    sys.exit()
-
 if __name__ == "__main__":
+    import os
+    from matplotlib.figure import Figure
+    import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use("TkAgg")
+    import sys
+    import tkinter as tk
+    from tkinter import DISABLED, NORMAL
+    from tkinter import BOTTOM, TOP, LEFT, RIGHT
+    from tkinter import ttk
+    import networkx as nx
+    from networkx import NetworkXException
+    import TkinterDnD2 as tkd
+    import PAFtoAF as paf
+    import platform
+    from PAFtoAF import UnsupportedFormatException, FormatSyntaxException,  PreferenceException, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException
+    from datetime import (date, datetime)
+    
+    system = platform.system()
+    if system not in ["Windows", "Linux", "Darwin"]:
+        root = tk.Tk()
+        root.withdraw()
+        msg = tk.messagebox.showinfo("Error", "It looks like you system is not supported.\nSupported systems : Windows, Linux, Darwin(MacOS)\nYour system : {}".format(system))
+        while msg != "ok":
+            continue
+        sys.exit()
+
     inputfile = ''
     fileformat = ''
     query_bool = False
