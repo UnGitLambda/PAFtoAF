@@ -36,10 +36,10 @@ To use PAFtoAF using a terminal here is the list of parameters and options you c
   - [-out \<filename(s)\>], the output for the resulting AF to be printed on,
   if you want the output to be on the terminal use stdout as filename, if you wish to have the AF printed to  multiple files,
   state every file this way : [file1, file2, file3...].  
-  - [-s \<solvername\>], the name of the solver you want to use to compute your task (if none is indicated,
-  mu-toksia will be chosen as default on windows and jArgSemSAT on Linux and MacOS.  
+  - [-s \<solvername\>], the name of the solver you want to use to compute your task (if none is indicated,  
+  jArgSemSAT will be chosen as default on windows and mu-toksia on Linux and MacOS).  
   - [-sp \<solverpath\>], the path to the solver, if none is indicated the program will 
-  scan the current directory to find the solver mu-toksia and will raise an Exception if it does not find it.  
+  scan the current directory to find the solver indicated by the -s and will raise an Exception if it does not find it.  
   Options :
   - --help prints this message.  
   - --problems prints the lists of available computational problems.  
