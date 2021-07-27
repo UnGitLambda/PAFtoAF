@@ -44,8 +44,7 @@ To use PAFtoAF using a terminal here is the list of parameters and options you c
 ### The GUI : PAFtoAFGUI.py
 
 To use the GUI make sure that the file PAFtoAF.py and the file PAFtoAFGUI.py are in the same folder.  
-Then you have 3 ways of doing it :  
-  - Executing the PAFtoAFGUI executable file.  
+Then you have 2 ways of doing it :  
   - Using a terminal (or command Prompt) and typing python (or python3, depending on you installation) followed by PAFtoAFGUI.py as :  
   python PAFtoAFGUI.py  
   - Using an IDE (such as the IDLE python, Spyder, Visual, etc...) opening the file in the IDE and then running it.  
