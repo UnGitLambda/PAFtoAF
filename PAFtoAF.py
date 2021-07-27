@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 31 2021
+Created in 07/2021
 
 @author: Eyal Cohen
 """
@@ -862,4 +862,5 @@ def main(ARGC, ARGV, ret = False):
                 for i in sysOutput:
                     print(i)
 
-main(len(argv), argv)
+if __name__ == "__main__":
+    main(len(argv), argv)
