@@ -42,10 +42,54 @@ if __name__ == "__main__":
     fig = Figure()
     
     if os.path.exists("temp"):
-        for file in os.scandir("temp"):
-            os.remove(file)
-        os.rmdir("temp")
+        if not (os.path.isdir("temp")):
+            os.remove("temp")
+        else:
+            for file in os.scandir("temp"):
+                os.remove(file)
+            os.rmdir("temp")
     os.mkdir("temp")
+    
+    a = open("temp/reloading_text.ptgf", "w+")
+    a.close()
+    
+    a = open("temp/reloading_text.papx", "w+")
+    a.close()
+    
+    def reset_values():
+        global reduction
+        global query_bool
+        global solverpath
+        solverpath = ''
+        query_bool = False
+        reduction = 0
+        textarea.delete("1.0","end")
+        textareaReduc["state"] = NORMAL
+        textareaReduc.delete("1.0","end")
+        textareaReduc["state"] = DISABLED
+        button0["bg"] = "red"
+        button0["state"] = DISABLED
+        button1["bg"] = "white"
+        button1["state"] = NORMAL
+        button2["bg"] = "white"
+        button2["state"] = NORMAL
+        button3["bg"] = "white"
+        button3["state"] = NORMAL
+        button4["bg"] = "white"
+        button4["state"] = NORMAL
+        problem_box.set("")
+        problem_value.set("")
+        semantic_box.set("")
+        semantic_value.set("")
+        problem_box["state"] = DISABLED
+        semantic_box["state"] = DISABLED
+        solver.delete(0, tk.END)
+        solver_value.set("")
+        solver["state"] = DISABLED
+        solver_select_button["state"] = DISABLED
+        solver_find_button["state"] = DISABLED
+        download_button["state"] = DISABLED
+        textareaReduc.configure(state = "disabled")
     
     def try_toPaf(file, fileformat = ''):
         """
@@ -56,7 +100,7 @@ if __name__ == "__main__":
         
         assert type(file) is str, "The first argument must be the name of the file. (type String)"
         assert type(fileformat) is str, "The second argument must be the format of the file. (type String)"
-        
+    
         if fileformat == '':
             try:
                 paf.toPaf(file, "ptgf" if file.endswith(".ptgf") or file.endswith(".tgf") else "papx")
@@ -229,7 +273,7 @@ if __name__ == "__main__":
         button2["bg"] = "white"
         button3["bg"] = "white"
         button4["bg"] = "white"
-        ClickReduc0()
+        reset_values()
         global inputfile
         global fileformat
         if event.data.endswith(".ptgf") or event.data.endswith(".papx"):
@@ -331,22 +375,14 @@ if __name__ == "__main__":
         it just reads the file that the load_text_selection gave it and loads the text inside the same way, load_text does.
         """
         
-        assert type(Sfile) is str, "The argument of this method is the name of the fileis has to load. (type String)"
+        assert type(Sfile) is str, "The argument of this method is the name of the file it has to load. (type String)"
         
-        textarea.delete("1.0","end")
-        textareaReduc["state"] = NORMAL
-        textareaReduc.delete("1.0","end")
-        textareaReduc["state"] = DISABLED
-        button0["bg"] = "white"
-        button1["bg"] = "white"
-        button2["bg"] = "white"
-        button3["bg"] = "white"
-        button4["bg"] = "white"
-        ClickReduc0()
+        reset_values()
+        
         global inputfile
         global fileformat
         global reduction
-        reduction = 0
+        
         if Sfile.endswith(".ptgf") or Sfile.endswith(".papx"):
             inputfile = Sfile
             fileformat = "ptgf" if Sfile.endswith(".ptgf") else "papx"
@@ -354,7 +390,7 @@ if __name__ == "__main__":
                 for line in file:
                     line=line.strip()
                     textarea.insert("end",f"{line}\n")
-            try_toPaf(Sfile)
+            try_toPaf(Sfile, fileformat)
             button0["bg"] = "red"
             button0["state"] = DISABLED
             button1["state"] = NORMAL
@@ -414,7 +450,7 @@ if __name__ == "__main__":
         inputfile = "temp/reloading_text.{}".format(fileformat)
         with open(inputfile, "w+") as openfile:
             openfile.write(textarea.get("1.0", "end"))
-            
+        
         load_text_file(inputfile)
             
     def line_is_int(line):
@@ -495,7 +531,7 @@ if __name__ == "__main__":
         help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\n")
         help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a tgf or apx format. The graph is dynamically modified to represent\nthe current AF.\n")
         help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the specified line,\nor use the open button to find it, its path will automatically be written\nin the box.\nIn abscence of a name or path mu-toksia will be selected under Linux and\nJArgSemSAT under Windows.\n")
-        help_text.insert("end", "After indicatinf or selecting your solver, click on the Find button, the path\nto the solver should now appear in the box.\n")
+        help_text.insert("end", "After indicating or selecting your solver, click on the Find button, the path\nto the solver should now appear in the box.\n")
         help_text.insert("end", "\nFinally you can select the task you would like to carry out.\nAnd all the options that you want to apply, using the buttons under\n'Solver Options :'.\n")
         help_text.insert("end", "\nThen you can click the COMPUTE button.\nThe result should appear in the figure down below.\nIf you click the COMPUTE button while everything is empty it\nshould write the information about the author and the version in the box.\n")
         help_text.insert("end", "\nPlease do not alter the 'temp' directory. You can copy a file if needed, but\nremoving/deleting one could cause an error, maybe even crashing the application.\nAnd putting a new file in could rewrite it, and would delete it on the closing\nof the application.\n")
@@ -528,7 +564,8 @@ if __name__ == "__main__":
             formats_text.insert("end", "\nTo do so, we add on the apx format a new keyword\nfor the prefernces : pref.\n")
             formats_text.insert("end", "So arguments are written as arg(name) followed by\nthe attacks where att(1,2) means that 1 attacks 2.\n")
             formats_text.insert("end", "Finally the preferences written pref(1,2) if 1 is prefered\nover 2.\n")
-            formats_text.insert("end", "Here is an exemple :\narg(1)\narg(2)\narg(3)\natt(1,2)\natt(2,1)\natt(2,3)\npref(1,2)\n\nMeans that 1 and 2 attack each other, 2 attack 3, 1 is preffered\nover 2.")
+            formats_text.insert("end", "\nAt the end of each line must appear a dot.\n")
+            formats_text.insert("end", "Here is an exemple :\narg(1).\narg(2).\narg(3).\natt(1,2).\natt(2,1).\natt(2,3).\npref(1,2).\n\nMeans that 1 and 2 attack each other, 2 attack 3, 1 is preffered\nover 2.")
             p_apxButton["bg"] = "red"
             p_apxButton["state"] = DISABLED
             p_tgfButton["bg"] = "white"
@@ -766,7 +803,6 @@ if __name__ == "__main__":
         """
         global reduction
         global inputfile
-        global outs
         global tempFile
         global fileformat
         reduction = 1
@@ -809,7 +845,6 @@ if __name__ == "__main__":
         """
         global reduction
         global inputfile
-        global outs
         global tempFile
         global fileformat
         reduction = 2
@@ -852,7 +887,6 @@ if __name__ == "__main__":
         """
         global reduction
         global inputfile
-        global outs
         global tempFile
         global fileformat
         reduction = 3
@@ -895,14 +929,13 @@ if __name__ == "__main__":
         """
         global reduction
         global inputfile
-        global outs
         global tempFile
         global fileformat
         reduction = 4
         try_toPaf(inputfile, fileformat)
         file = "temp/Reduction4-AF-tmp.{}".format("tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
         textareaReduc.configure(state = "normal")
-        paf.reduction4([file]+outs, "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
+        paf.reduction4([file], "tgf" if (fileformat == "ptgf" or fileformat == "tgf") else "apx")
         with open(file,"r") as openfile:
             textareaReduc.delete("1.0", "end")
             for line in openfile:
@@ -1058,6 +1091,7 @@ if __name__ == "__main__":
         """
         com = command_line("compute").split()
         return_text["state"] = NORMAL
+        return_text.delete("1.0", "end")
         try:
             for w in paf.main(len(com), com, True):
                 return_text.insert("end", w)
@@ -1075,7 +1109,6 @@ if __name__ == "__main__":
         global inputfile
         global fileformat
         global reduction
-        global outs
         global solver 
         global solverPath
         today = date.today()

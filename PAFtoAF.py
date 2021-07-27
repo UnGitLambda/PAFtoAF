@@ -479,7 +479,7 @@ def write_arg_apx(file, arg):
     assert type(file) is TextIOWrapper, "The first argument of this method must be the file we will write on (opened by the open method). (type TextIOWrapper)"
     assert type(arg) is str, "The second argument of this method must be the argument to write down. (type String)"
     
-    file.write("arg({})\n".format(arg))
+    file.write("arg({}).\n".format(arg))
 
 def write_att_apx(file, arg1, arg2):
     """
@@ -491,7 +491,7 @@ def write_att_apx(file, arg1, arg2):
     assert type(arg1) is str, "The second argument of this method must be the first argument in the attack to write down. (type String)"
     assert type(arg2) is str, "The third argument of this method must be the second argument in the attack to write down. (type String)"
     
-    file.write("att({},{})\n".format(arg1,arg2))
+    file.write("att({},{}).\n".format(arg1,arg2))
 
 def print_AF(newAttacksFrom, fileformat):
     """
