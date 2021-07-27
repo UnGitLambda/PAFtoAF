@@ -1,8 +1,0 @@
-README : descirption des nouveaux formats + LICENCE + explication sur le fichier temp
-
-HELP TEXT : explication sur où trouver le fichier reloading
-
-Informer que les self-attacks ne sont pas affichée par show graph
-
-Regler l'affichagequand paf.main est un NoneType.
-
