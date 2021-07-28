@@ -11,6 +11,49 @@ PAFtoAF can be used in two ways :
 * Using the terminal.
 * Using the PAFtoAFGUI.
 
+### File formats  
+
+PAFtoAF reads Preference-based Argumentation Framework (PAF) and 'reduce' them, meaning it applies a reduction.  
+The formats of Argumentation Framework (AF) so far were Trivial Graph Format (TGF) and Aspartix (APX).  
+For the sake of the project I had to adapt these format to PAFs, creating the Prefernce-Based Trivial Graph Format (PTGF) and the Preference-Based Aspartix (PAPX).  
+Here is how it was done :
+
+- The .tgf format is written as follows : every argument is indicated (by its name)  
+then a \# is put and every attack is written under the \# as : arg1 arg2.  
+So for the .ptgf format all I did was add a second # after listing every attack  
+and writing the preferences under this second \# the same way as with attacks.  
+Here is an exemple :  
+1  
+2  
+3  
+\#  
+1 2  
+2 3  
+\#  
+2 1  
+
+- The .apx format is quite different than the .tgf.  
+Every argument a is written this way : 'arg(a).'  
+Every attack is like this : 'att(a,b).'  
+So in the .papx, every preference is written 'pref(a,b).'  
+Here is the same PAF as above but in papx instead of ptgf :  
+arg(1).  
+arg(2).  
+arg(3).  
+att(1,2).  
+att(2,3).  
+pref(2,1).  
+  
+The only thing that matter in the order this format (papx) is that an attack between a and b must be declared after declaring a and b.  
+But you can write the same PAF by writing : 
+  
+arg(1).  
+arg(2).  
+att(1,2).  
+pref(2,1).  
+arg(3).  
+att(2,3).  
+
 ## Installation and requirements
 
 PAFtoAF can be installed with the GUI on github at <https://github.com/UnHommeLambda/PAFtoAF>.  
@@ -55,10 +98,18 @@ Then you have 2 ways of doing it :
   - Using an IDE (such as the IDLE python, Spyder, Visual, etc...) opening the file in the IDE and then running it.  
 Then on the GUI you can click the Help button (at the top) for more help on how it works, the formats button to have
 a better understanding of the accepted formats, the problems buttons to see about the available tasks and their meanings.  
-##### The save button  
+#### The save button  
 It allows you to save the parameters you entered in the GUI as the corresponding command line in a text file.  
-##### The download button  
+#### The download button  
 It allows you to save the AF (resulting from the reduction) into a new file.  
+#### The temp directory  
+When you start the GUI a directory is created, in the current directory, called 'temp'.  
+This directory will contain 2 files called reload_text.ptgf and reload_text.papx.  
+These files are used if the button reload is clicked :  
+the text in the text area will be read and if it is in one of the accepted format it will be written in the according file.  
+Also in the temp directory will be stored a file per reduction you do and a file containing the graph if you check the 'show the graph' box.  
+Please refrain from withdrawing a file from this directory.  
+You can copy files but removing/deleting one may lead to an error or, in the worst case, a crash.  
 
 ### Bugs  
 To file bugs reports, or feature requests, please send an email to <eyal.cohen@etu.u-paris.fr>.  
