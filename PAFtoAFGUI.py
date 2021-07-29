@@ -528,7 +528,8 @@ if __name__ == "__main__":
         help_text.insert("end", "\nThis application allows you to use a Preference-based Argumentation Framework\n(PAF) and transform it into an Extension-based Argumentation Framework (AF).\n")
         help_text.insert("end", "\nTo do so, please choose a file in the ptgf, papx, tgf or apx format\n(for more information please click on the formats button in the main window).\n")
         help_text.insert("end", "\nDrag you file in the area specifying so or use the 'open' button to select one.\n(Don't forget to specify the format in the list or extensions)\nThe text in the file should now appear.\n")
-        help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\n")
+        help_text.insert("end", "\nIf you want to modify the PAF (or even write one on the fly) you can just modify\nthe text in the area and then click on the reload button. The PAF will be written\non a file in the temp directory.\nThere should be multiple files in the directory but the one you are looking for\nhere is named 'reloading_text.ptgf' or 'reloading_text.papx', depending on the\nformat you chose to write it in.\nIf you want to get it please copy the file and let the original in the directory.\nIf you move the original the software could not be able to find it and\ngenerate errors.\n")
+        help_text.insert("end", "\nYou can generate the graph described in the file by checking the box under the\ntext area.\nNote that self-attacks will not be shown because the API used considers edges as\nlines between nodes so a self attacks is a line with a length of 0.\n")
         help_text.insert("end", "\nThen select the reduction you wish to apply, the resulting AF should\nappear in a tgf or apx format. The graph is dynamically modified to represent\nthe current AF.\n")
         help_text.insert("end", "\nIf you want to use a solver, please enter it's name in the specified line,\nor use the open button to find it, its path will automatically be written\nin the box.\nIn abscence of a name or path mu-toksia will be selected under Linux and\nJArgSemSAT under Windows.\n")
         help_text.insert("end", "After indicating or selecting your solver, click on the Find button, the path\nto the solver should now appear in the box.\n")
@@ -1093,13 +1094,24 @@ if __name__ == "__main__":
         return_text["state"] = NORMAL
         return_text.delete("1.0", "end")
         try:
-            for w in paf.main(len(com), com, True):
-                return_text.insert("end", w)
-            return_text["state"] = DISABLED
+            ret = paf.main(len(com), com, True)
+            if (ret is not None):
+                for w in ret:
+                    return_text.insert("end", w)
+                return_text["state"] = DISABLED
+            else:
+                return_text.insert("end", "No output.")
+                return_text["state"] = DISABLED
         except (UnsupportedFormatException, FormatSyntaxException,  PreferenceException, FormatException, CommandLineException, FindingSolverException, UnsupportedOSException) as e:
             return_text.insert("end", e.name)
             return_text.insert("end", ":")
             return_text.insert("end", str(e))
+            return_text["state"] = DISABLED
+        except Exception as e:
+            return_text.insert("end", e.name)
+            return_text.insert("end", ":")
+            return_text.insert("end", str(e))
+            return_text["state"] = DISABLED
     
     def save():
         """
