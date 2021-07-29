@@ -96,18 +96,26 @@ Then you have 2 ways of doing it :
   - Using a terminal (or command Prompt) and typing python (or python3, depending on you installation) followed by PAFtoAFGUI.py as :  
   python PAFtoAFGUI.py  
   - Using an IDE (such as the IDLE python, Spyder, Visual, etc...) opening the file in the IDE and then running it.  
-Then on the GUI you can click the Help button (at the top) for more help on how it works, the formats button to have
-a better understanding of the accepted formats, the problems buttons to see about the available tasks and their meanings.  
+#### The help button  
+A 'Help' button (at the top) if here if you need more information on how it works. 
+#### The formats button 
+There is also a 'Formats' button next to the 'Help' button to have a better understanding of the accepted formats.  
+#### The problems button
+The 'Problems' button next to it is here to see about the available tasks and their meanings.  
+#### The save button  
+The 'save' button is the last on the option buttons line and allows you to save the parameters you entered in the GUI as the corresponding command line in a text file. 
 #### The show graph checkbox  
-The checkbox allows you to see the graph representing the PAF (if no reduction is applied yet) or the resulting AF.  
+The checkbox  under the left text area, allows you to see the graph representing the PAF (if no reduction is applied yet) or the resulting AF.  
 The problem with the API used (networkx) is that edges are considered as lines between 2 nodes.  
 So self loop are considered as a line between a point and itself, in other world, nothing.  
 That is why if you graph contains a self attack it won't be shown on the graph.  
-I you found a way to change that, feel free to implement it and maybe send me an email with the solution you have found.  
-#### The save button  
-It allows you to save the parameters you entered in the GUI as the corresponding command line in a text file.  
+I you found a way to change that, feel free to implement it and maybe send me an email with the solution you have found.   
+#### The reload button  
+The 'reload' button is over the left text area. It is here if you want to modify the PAF in the text area (or write a new PAF on the fly),  
+after doing so, hit the button to let the software know that this is what it needs to read and not the file you selected before.  
+The realoading_text file will be located in the temp directory, explained a bit further.
 #### The download button  
-It allows you to save the AF (resulting from the reduction) into a new file.  
+This button is over the right text area and allows you to save the AF (resulting from the reduction) into a new file.  
 #### The temp directory  
 When you start the GUI a directory is created, in the current directory, called 'temp'.  
 This directory will contain 2 files called reload_text.ptgf and reload_text.papx.  
