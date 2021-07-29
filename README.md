@@ -13,9 +13,9 @@ PAFtoAF can be used in two ways :
 
 ### File formats  
 
-PAFtoAF reads Preference-based Argumentation Framework (PAF) and 'reduce' them, meaning it applies a reduction.  
+PAFtoAF reads Preference-based Argumentation Framework (PAF) and 'reduces' them, meaning it combines the attack and preference relations into a new one (sometimes called defeat relation).  
 The formats of Argumentation Framework (AF) so far were Trivial Graph Format (TGF) and Aspartix (APX).  
-For the sake of the project I had to adapt these format to PAFs, creating the Prefernce-Based Trivial Graph Format (PTGF) and the Preference-Based Aspartix (PAPX).  
+For the sake of the project I had to adapt these format to PAFs, creating the Preference-Based Trivial Graph Format (PTGF) and the Preference-Based Aspartix (PAPX).  
 Here is how it was done :
 
 - The .tgf format is written as follows : every argument is indicated (by its name)  
@@ -44,7 +44,7 @@ att(1,2).
 att(2,3).  
 pref(2,1).  
   
-The only thing that matter in the order this format (papx) is that an attack between a and b must be declared after declaring a and b.  
+The only thing that matters, regarding the papx format, is that an attack att(a,b). or a preference pref(a,b). must be declared after the arguments arg(a). and arg(b).  
 But you can write the same PAF by writing : 
   
 arg(1).  
@@ -97,7 +97,7 @@ Then you have 2 ways of doing it :
   python PAFtoAFGUI.py  
   - Using an IDE (such as the IDLE python, Spyder, Visual, etc...) opening the file in the IDE and then running it.  
 #### The help button  
-A 'Help' button (at the top) if here if you need more information on how it works. 
+A 'Help' button (at the top) is here if you need more information on how it works. 
 #### The formats button 
 There is also a 'Formats' button next to the 'Help' button to have a better understanding of the accepted formats.  
 #### The problems button
@@ -108,8 +108,8 @@ The 'save' button is the last on the option buttons line and allows you to save 
 The checkbox  under the left text area, allows you to see the graph representing the PAF (if no reduction is applied yet) or the resulting AF.  
 The problem with the API used (networkx) is that edges are considered as lines between 2 nodes.  
 So self loop are considered as a line between a point and itself, in other world, nothing.  
-That is why if you graph contains a self attack it won't be shown on the graph.  
-I you found a way to change that, feel free to implement it and maybe send me an email with the solution you have found.   
+That is why if your graph contains a self attack it won't be shown on the graph.  
+I you find a way to change that, feel free to implement it and maybe send me an email with the solution you have found.   
 #### The reload button  
 The 'reload' button is over the left text area. It is here if you want to modify the PAF in the text area (or write a new PAF on the fly),  
 after doing so, hit the button to let the software know that this is what it needs to read and not the file you selected before.  
