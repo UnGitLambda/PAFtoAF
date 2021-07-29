@@ -98,6 +98,12 @@ Then you have 2 ways of doing it :
   - Using an IDE (such as the IDLE python, Spyder, Visual, etc...) opening the file in the IDE and then running it.  
 Then on the GUI you can click the Help button (at the top) for more help on how it works, the formats button to have
 a better understanding of the accepted formats, the problems buttons to see about the available tasks and their meanings.  
+#### The show graph checkbox  
+The checkbox allows you to see the graph representing the PAF (if no reduction is applied yet) or the resulting AF.  
+The problem with the API used (networkx) is that edges are considered as lines between 2 nodes.  
+So self loop are considered as a line between a point and itself, in other world, nothing.  
+That is why if you graph contains a self attack it won't be shown on the graph.  
+I you found a way to change that, feel free to implement it and maybe send me an email with the solution you have found.  
 #### The save button  
 It allows you to save the parameters you entered in the GUI as the corresponding command line in a text file.  
 #### The download button  
