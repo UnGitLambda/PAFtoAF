@@ -626,9 +626,10 @@ def solverOutput(solver, path = ".", scan = False, solverArgv = argv):
     output = ''
     try:
         output = os.popen(solverExecutableCommand(solver,path, scan, solverArgv)).readlines()
-    except:
+    except Exception as e:
+        print(str(e))
         raise FindingSolverException("Unable to execute the solver.")
-    if output=='' :
+    if output == '':
         raise FindingSolverException("Unable to find the solver.")
     return(output)
 
@@ -671,6 +672,8 @@ def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
                 execCommand = "java -jar " + execCommand
             elif Path.__str__().endswith(".py"):
                 execCommand = "python3 " + execCommand
+            else :
+                execCommand = "./" + execCommand
     return(execCommand)
 
 def solverName(file, solver):
