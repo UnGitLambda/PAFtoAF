@@ -692,7 +692,7 @@ def solverName(file, solver):
     assert type(file) is DirEntry, "The first argument in this method is the file we want to compare to the solver. (type DirEntry)"
     assert type(solver) is str, "The second argument of this method must be the name of the solver. (type String)"
     if platform.system() == "Windows":
-        answer = os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(".py", "") == solver
+        answer = os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(file).replace(".py", "") == solver
     else:
         answer = os.fsdecode(file).replace("./","") == solver or os.fsdecode(file).replace("./","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace("./",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(file).replace(".py", "") == solver
     return(answer)
