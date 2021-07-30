@@ -60,8 +60,11 @@ if __name__ == "__main__":
         global reduction
         global query_bool
         global solverpath
-        solverpath = ''
         query_bool = False
+        task_label.grid(row = 0, column = 1)
+        queryframe.grid_remove()
+        renew_query_frame()
+        solverpath = ''
         reduction = 0
         textarea.delete("1.0","end")
         textareaReduc["state"] = NORMAL
@@ -773,29 +776,7 @@ if __name__ == "__main__":
         textareaReduc.delete("1.0","end")
         if graph_check_value.get() == 1:
             show_graph()
-        button0["bg"] = "red"
-        button0["state"] = DISABLED
-        button1["bg"] = "white"
-        button1["state"] = NORMAL
-        button2["bg"] = "white"
-        button2["state"] = NORMAL
-        button3["bg"] = "white"
-        button3["state"] = NORMAL
-        button4["bg"] = "white"
-        button4["state"] = NORMAL
-        problem_box.set("")
-        problem_value.set("")
-        semantic_box.set("")
-        semantic_value.set("")
-        problem_box["state"] = DISABLED
-        semantic_box["state"] = DISABLED
-        solver.delete(0, tk.END)
-        solver_value.set("")
-        solver["state"] = DISABLED
-        solver_select_button["state"] = DISABLED
-        solver_find_button["state"] = DISABLED
-        download_button["state"] = DISABLED
-        textareaReduc.configure(state = "disabled")
+        reset_values()
     
     def ClickReduc1():
         """
@@ -1158,7 +1139,7 @@ if __name__ == "__main__":
         if reduction != 0:
             com += "-r {} ".format(reduction)
         if semantic_value.get() != '' and problem_value.get() != '':
-            com += "-p {}-{} ".format(semantic_value.get(), problem_value.get())
+            com += "-p {}-{} ".format(problem_value.get(), semantic_value.get())
             if query.get() != '':
                 com += "-a {} ".format(query.get())
         if solver_value.get() != '':
