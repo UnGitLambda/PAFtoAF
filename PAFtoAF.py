@@ -659,6 +659,13 @@ def solverExecutableCommand(solver, path = ".", scan = False, Argv = argv):
             for file in os.scandir():
                 if solverName(file, solver):
                     execCommand = file.path + ' ' + commandLine(Argv)
+                    if solver.endswith(".jar"):
+                        execCommand = "java -jar " + execCommand
+                    elif solver.endswith(".py"):
+                        execCommand = "python3 " + execCommand
+                    else :
+                        execCommand = "./" + execCommand
+                    break
     elif Path is not None:
         if os.path.isdir(Path):
             try :
@@ -687,7 +694,7 @@ def solverName(file, solver):
     if platform.system() == "Windows":
         answer = os.fsdecode(file).replace(".\\","") == solver or os.fsdecode(file).replace(".\\","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace(".\\",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(".py", "") == solver
     else:
-        answer = os.fsdecode(file).replace("./","") == solver or os.fsdecode(file).replace("./","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace("./",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode(".py", "") == solver
+        answer = os.fsdecode(file).replace("./","") == solver or os.fsdecode(file).replace("./","") == ''.join([solver,".exe"]) or ''.join([os.fsdecode(file).replace("./",""),".exe"]) == solver or os.fsdecode(file) == solver or os.fsdecode(file).replace(".jar", "") == solver or os.fsdecode.replace(".py", "") == solver
     return(answer)
 
 def commandLine(Argv):
